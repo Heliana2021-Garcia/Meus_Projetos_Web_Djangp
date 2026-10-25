@@ -1,0 +1,20 @@
+{% extends "layouts/base.html" %}
+{% block titulo %}{{ titulo_pagina }}{% endblock %}
+{% block conteudo %}
+<div class="mx-auto max-w-3xl px-4 py-10">
+  <h1 class="text-2xl font-semibold">{{ titulo_pagina }}</h1>
+  <form method="post" class="mt-6 space-y-4 rounded-2xl border border-instic-borda bg-instic-surface p-6" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+    <div class="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">{{ form.non_field_errors.0 }}</div>
+    {% endif %}
+    {% for campo in form %}
+      {% include "components/campo.html" %}
+    {% endfor %}
+    <div class="flex gap-3">
+      <button type="submit" class="btn-ouro">Guardar</button>
+      <a href="{% url 'vagas:minhas' %}" class="rounded-lg border border-instic-borda px-4 py-2 text-sm hover:border-instic-gold">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

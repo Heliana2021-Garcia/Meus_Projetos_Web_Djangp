@@ -1,0 +1,112 @@
+{% extends "layouts/base.html" %}
+{% block titulo %}Relatórios de empregabilidade{% endblock %}
+{% block conteudo %}
+<div class="mx-auto max-w-6xl px-4 py-10">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-semibold">Relatórios de empregabilidade</h1>
+      <p class="mt-1 text-sm text-texto-secundario">Taxa de colocação = estudantes com estágio aprovado ÷ estudantes registados.</p>
+    </div>
+    <a href="{% url 'relatorios:exportar' %}" class="btn-ouro"><i class='bx bx-download'></i> Exportar colocações (CSV)</a>
+  </div>
+
+  <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="rounded-2xl border border-instic-borda bg-instic-surface p-5">
+      <p class="text-sm text-texto-secundario">Estudantes registados</p>
+      <p class="text-3xl font-semibold">{{ ind.total_estudantes }}</p>
+      <p class="text-xs text-texto-secundario">{{ ind.elegiveis }} elegíveis para candidatura</p>
+    </div>
+    <div class="rounded-2xl border border-instic-borda bg-instic-surface p-5">
+      <p class="text-sm text-texto-secundario">Colocados</p>
+      <p class="text-3xl font-semibold text-instic-gold">{{ ind.colocados }}</p>
+      <p class="text-xs text-texto-secundario">{{ ind.em_estagio }} em estágio agora</p>
+    </div>
+    <div class="rounded-2xl border border-instic-borda bg-instic-surface p-5">
+      <p class="text-sm text-texto-secundario">Taxa de colocação</p>
+      <p class="text-3xl font-semibold text-instic-gold">{{ ind.taxa_colocacao }}%</p>
+      <p class="text-xs text-texto-secundario">{{ ind.estagios_concluidos }} estágios concluídos</p>
+    </div>
+    <div class="rounded-2xl border border-instic-borda bg-instic-surface p-5">
+      <p class="text-sm text-texto-secundario">Avaliação média</p>
+      <p class="text-3xl font-semibold">{{ ind.media_avaliacoes|floatformat:2|default:"—" }}</p>
+      <p class="text-xs text-texto-secundario">numa escala de 0 a 20</p>
+    </div>
+  </div>
+
+  <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="rounded-2xl border border-instic-borda bg-instic-surface p-5">
+      <p class="text-sm text-texto-secundario">Empresas</p><p class="text-3xl font-semibold">{{ ind.total_empresas }}</p>
+    </div>
+    <div class="rounded-2xl border border-instic-borda bg-instic-surface p-5">
+      <p class="text-sm text-texto-secundario">Parceiras institucionais</p><p class="text-3xl font-semibold">{{ ind.empresas_parceiras }}</p>
+    </div>
+    <div class="rounded-2xl border border-instic-borda bg-instic-surface p-5">
+      <p class="text-sm text-texto-secundario">Vagas abertas</p><p class="text-3xl font-semibold">{{ ind.vagas_abertas }}</p>
+    </div>
+    <div class="rounded-2xl border border-instic-borda bg-instic-surface p-5">
+      <p class="text-sm text-texto-secundario">NIF por validar</p><p class="text-3xl font-semibold">{{ ind.empresas_nif_pendente }}</p>
+    </div>
+  </div>
+
+  <div class="mt-8 rounded-2xl border border-instic-borda bg-instic-surface p-5">
+    <h2 class="font-medium">Colocação por curso</h2>
+    <div class="mt-3 overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead class="text-texto-secundario">
+          <tr><th class="py-2 pr-4">Curso</th><th class="py-2 pr-4">Estudantes</th><th class="py-2 pr-4">Colocados</th><th class="py-2 pr-4 w-1/3">Taxa</th><th class="py-2">Avaliação média</th></tr>
+        </thead>
+        <tbody>
+          {% for linha in por_curso %}
+          <tr class="border-t border-instic-borda">
+            <td class="py-2 pr-4">{{ linha.curso.nome }}</td>
+            <td class="py-2 pr-4">{{ linha.total }}</td>
+            <td class="py-2 pr-4">{{ linha.colocados }}</td>
+            <td class="py-2 pr-4">
+              <div class="flex items-center gap-2">
+                <div class="h-2 flex-1 rounded bg-instic-borda"><div class="h-2 rounded bg-instic-gold" style="width: {{ linha.taxa }}%"></div></div>
+                <span class="w-10 text-right text-xs text-texto-secundario">{{ linha.taxa }}%</span>
+              </div>
+            </td>
+            <td class="py-2">{{ linha.media_avaliacao|floatformat:2|default:"—" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="py-4 text-center text-texto-secundario">Ainda não há cursos registados.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="mt-8 grid gap-4 lg:grid-cols-2">
+    <div class="rounded-2xl border border-instic-borda bg-instic-surface p-5">
+      <h2 class="font-medium">Candidaturas por estado <span class="text-sm text-texto-secundario">({{ funil.total }})</span></h2>
+      <div class="mt-3 space-y-3">
+        {% for etapa in funil.etapas %}
+        <div>
+          <div class="mb-1 flex justify-between text-xs text-texto-secundario"><span>{{ etapa.rotulo }}</span><span>{{ etapa.n }} &middot; {{ etapa.pct }}%</span></div>
+          <div class="h-2 rounded bg-instic-borda"><div class="h-2 rounded {% if etapa.estado == 'REJEITADO' %}bg-red-400{% elif etapa.estado == 'APROVADO' %}bg-green-400{% elif etapa.estado == 'CANCELADA' %}bg-zinc-500{% else %}bg-instic-gold{% endif %}" style="width: {{ etapa.pct }}%"></div></div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-instic-borda bg-instic-surface p-5">
+      <h2 class="font-medium">Empresas com mais estagiários</h2>
+      <table class="mt-3 w-full text-left text-sm">
+        <thead class="text-texto-secundario"><tr><th class="py-2 pr-4">Empresa</th><th class="py-2 pr-4">Estagiários</th><th class="py-2">Avaliação média</th></tr></thead>
+        <tbody>
+          {% for e in top_empresas %}
+          <tr class="border-t border-instic-borda">
+            <td class="py-2 pr-4">{{ e.nome }}{% if e.e_parceira %} <i class='bx bxs-star text-instic-gold' title="Parceira institucional"></i>{% endif %}</td>
+            <td class="py-2 pr-4">{{ e.estagiarios }}</td>
+            <td class="py-2">{{ e.media|floatformat:2|default:"—" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3" class="py-4 text-center text-texto-secundario">Ainda não há estágios aprovados.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

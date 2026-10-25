@@ -1,0 +1,25 @@
+{% extends "layouts/base.html" %}
+{% block titulo %}{{ titulo_pagina }}{% endblock %}
+{% block conteudo %}
+<div class="mx-auto max-w-lg px-4 py-12">
+  <div class="rounded-2xl border border-instic-borda bg-instic-surface p-8">
+    <h1 class="text-2xl font-semibold">{{ titulo_pagina }}</h1>
+    <p class="mb-6 mt-1 text-sm text-texto-secundario">{{ subtitulo_pagina }}</p>
+    <form method="post" class="space-y-4" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+      <div class="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+        {{ form.non_field_errors.0 }}
+      </div>
+      {% endif %}
+      {% for campo in form %}
+        {% include "components/campo.html" %}
+      {% endfor %}
+      <button type="submit" class="btn-ouro w-full">Criar conta</button>
+    </form>
+    <p class="mt-6 text-center text-sm text-texto-secundario">
+      Já tem conta? <a href="{% url 'contas:entrar' %}" class="text-instic-gold hover:underline">Entrar</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

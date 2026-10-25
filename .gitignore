@@ -11,3 +11,7 @@ node_modules/
 .vscode/
 .idea/
 Thumbs.db
+scripts/tailwindcss.exe
+scripts/tailwindcss.exe
+dados.json
+db-backup.sqlite3

@@ -1,0 +1,103 @@
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @page {
+    size: a4 portrait;
+    margin: 2cm 2.2cm 2.8cm 2.2cm;
+    @frame rodape_frame {
+      -pdf-frame-content: rodape;
+      bottom: 1cm;
+      margin-left: 2.2cm;
+      margin-right: 2.2cm;
+      height: 1.4cm;
+    }
+  }
+  body { font-family: Helvetica; font-size: 11pt; line-height: 140%; color: #111111; }
+  .timbre { text-align: center; border-bottom: 2px solid #c5a059; padding-bottom: 8px; margin-bottom: 18px; }
+  .timbre img { height: 70px; }
+  .universidade { font-size: 13pt; font-weight: bold; }
+  .instituto { font-size: 10pt; }
+  .oficio { text-align: right; font-size: 10pt; margin-bottom: 14px; }
+  .titulo { text-align: center; font-size: 13pt; font-weight: bold; margin: 14px 0; }
+  .destino { margin-bottom: 12px; }
+  .dados { width: 100%; border-collapse: collapse; margin: 10px 0 14px 0; }
+  .dados td { border: 1px solid #888888; padding: 4px 6px; font-size: 10pt; }
+  .dados td.rotulo { width: 32%; background-color: #f0ead9; font-weight: bold; }
+  p { text-align: justify; margin: 0 0 10px 0; }
+  .assinatura { margin-top: 40px; text-align: center; }
+  #rodape { font-size: 8pt; color: #555555; text-align: center; }
+</style>
+</head>
+<body>
+
+  <div class="timbre">
+    {% if logo %}<img src="{{ logo }}"><br/>{% endif %}
+    <div class="universidade">{{ config.UNIVERSIDADE }}</div>
+    <div class="instituto">{{ config.INSTITUTO }}</div>
+  </div>
+
+  <div class="oficio">
+    Ofício n.º {{ carta.referencia }}<br/>
+    {{ config.CIDADE }}, {{ carta.emitida_em|date:"j \d\e F \d\e Y" }}
+  </div>
+
+  <div class="destino">
+    <b>Exmo(a). Senhor(a)</b><br/>
+    Responsável de Recursos Humanos<br/>
+    <b>{{ empresa.nome }}</b><br/>
+    {% if responsavel %}À atenção de: {{ responsavel }}<br/>{% endif %}
+    NIF: {{ empresa.nif }}
+  </div>
+
+  <div class="titulo">CARTA DE ENCAMINHAMENTO DE ESTÁGIO</div>
+
+  <p>
+    <b>Assunto:</b> Encaminhamento de estudante para a realização de estágio profissional.
+  </p>
+
+  <p>
+    O {{ config.INSTITUTO }} da {{ config.UNIVERSIDADE|title }} vem, por este meio, encaminhar
+    o(a) estudante abaixo identificado(a) para a realização de estágio nessa instituição,
+    na sequência do processo de selecção conduzido por V. Exas. para a vaga
+    "{{ vaga.titulo }}", através do sistema SIGEST.
+  </p>
+
+  <table class="dados">
+    <tr><td class="rotulo">Nome</td><td>{{ nome_estudante }}</td></tr>
+    <tr><td class="rotulo">Número de estudante</td><td>{{ estudante.numero_estudante }}</td></tr>
+    <tr><td class="rotulo">Curso</td><td>{{ estudante.curso.nome }}</td></tr>
+    <tr><td class="rotulo">Ano de frequência</td><td>{{ estudante.ano_frequencia }}.º ano</td></tr>
+    <tr><td class="rotulo">Vaga</td><td>{{ vaga.titulo }}</td></tr>
+    <tr><td class="rotulo">Modalidade</td><td>{{ vaga.get_modalidade_display }}</td></tr>
+    {% if vaga.localizacao %}<tr><td class="rotulo">Local</td><td>{{ vaga.localizacao }}</td></tr>{% endif %}
+    <tr><td class="rotulo">Duração prevista</td><td>{{ vaga.duracao_meses }} meses</td></tr>
+  </table>
+
+  <p>
+    O(A) estudante cumpre os requisitos académicos exigidos pelo INSTIC para a realização
+    de estágio, nomeadamente a frequência do {{ ano_minimo }}.º ano ou superior e uma média
+    geral não inferior a {{ media_minima|floatformat:"-2" }} valores.
+  </p>
+
+  <p>
+    Solicitamos que, no final do estágio, seja enviada ao INSTIC a avaliação do desempenho
+    do(a) estudante, numa escala de 0 a 20 valores.
+  </p>
+
+  <p>Sem outro assunto de momento, apresentamos os nossos melhores cumprimentos.</p>
+
+  <div class="assinatura">
+    {{ config.SIGNATARIO_CARGO }}<br/><br/><br/>
+    _______________________________<br/>
+    {% if config.SIGNATARIO_NOME %}{{ config.SIGNATARIO_NOME }}{% endif %}
+  </div>
+
+  <div id="rodape">
+    {% if config.RODAPE %}{{ config.RODAPE }}<br/>{% endif %}
+    Ofício {{ carta.referencia }} &middot; Documento emitido pelo SIGEST &middot;
+    Página <pdf:pagenumber> de <pdf:pagecount>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,87 @@
+{% extends "layouts/base.html" %}
+{% block titulo %}Painel da administração{% endblock %}
+{% block conteudo %}
+<div class="mx-auto max-w-6xl px-4 py-10">
+  <h1 class="text-2xl font-semibold">Painel da administração</h1>
+  <p class="mt-1 text-texto-secundario">Bem-vindo, {{ user.get_full_name|default:user.username }}.</p>
+
+  <div class="mt-6 grid gap-4 sm:grid-cols-3">
+    <div class="rounded-2xl border border-instic-borda bg-instic-surface p-5">
+      <p class="text-sm text-texto-secundario">Estudantes</p><p class="text-3xl font-semibold">{{ total_estudantes }}</p>
+    </div>
+    <div class="rounded-2xl border border-instic-borda bg-instic-surface p-5">
+      <p class="text-sm text-texto-secundario">Empresas</p><p class="text-3xl font-semibold">{{ total_empresas }}</p>
+    </div>
+    <div class="rounded-2xl border border-instic-borda bg-instic-surface p-5">
+      <p class="text-sm text-texto-secundario">NIF por validar</p><p class="text-3xl font-semibold text-instic-gold">{{ empresas_pendentes|length }}</p>
+    </div>
+  </div>
+
+  <div class="mt-8 rounded-2xl border border-instic-borda bg-instic-surface p-5">
+    <h2 class="font-medium">Empresas com NIF por validar</h2>
+    {% if empresas_pendentes %}
+    <div class="mt-3 overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead class="text-texto-secundario">
+          <tr><th class="py-2 pr-4">Empresa</th><th class="py-2 pr-4">NIF</th><th class="py-2 pr-4">Responsável</th><th class="py-2 pr-4">Registo</th><th class="py-2"></th></tr>
+        </thead>
+        <tbody>
+          {% for e in empresas_pendentes %}
+          <tr class="border-t border-instic-borda">
+            <td class="py-2 pr-4">{{ e.nome }}</td>
+            <td class="py-2 pr-4">{{ e.nif }}</td>
+            <td class="py-2 pr-4">{{ e.utilizador.get_full_name|default:e.utilizador.username }}</td>
+            <td class="py-2 pr-4">{{ e.criado_em|date:"d/m/Y" }}</td>
+            <td class="py-2 text-right">
+              <form method="post" action="{% url 'relatorios:validar_nif' e.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-ouro !px-3 !py-1 text-xs"><i class='bx bx-check'></i> Validar NIF</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="mt-3 text-sm text-texto-secundario">Não há empresas à espera de validação.</p>
+    {% endif %}
+  </div>
+
+  <div class="mt-8 rounded-2xl border border-instic-borda bg-instic-surface p-5">
+    <h2 class="font-medium">Candidaturas aprovadas &middot; cartas de encaminhamento</h2>
+    {% if aprovadas %}
+    <div class="mt-3 overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead class="text-texto-secundario">
+          <tr><th class="py-2 pr-4">Estudante</th><th class="py-2 pr-4">Curso</th><th class="py-2 pr-4">Vaga</th><th class="py-2 pr-4">Empresa</th><th class="py-2 pr-4">Carta</th><th class="py-2"></th></tr>
+        </thead>
+        <tbody>
+          {% for c in aprovadas %}
+          <tr class="border-t border-instic-borda">
+            <td class="py-2 pr-4">{{ c.estudante.utilizador.get_full_name|default:c.estudante.utilizador.username }}<br><span class="text-xs text-texto-secundario">{{ c.estudante.numero_estudante }}</span></td>
+            <td class="py-2 pr-4">{{ c.estudante.curso.sigla }}</td>
+            <td class="py-2 pr-4">{{ c.vaga.titulo }}</td>
+            <td class="py-2 pr-4">{{ c.vaga.empresa.nome }}</td>
+            <td class="py-2 pr-4">{% if c.carta %}{{ c.carta.referencia }}{% else %}<span class="text-texto-secundario">Por emitir</span>{% endif %}</td>
+            <td class="py-2 text-right">
+              {% if c.carta %}
+              <a href="{% url 'documentos:descarregar' c.carta.pk %}" target="_blank" class="btn-ouro !px-3 !py-1 text-xs"><i class='bx bx-file'></i> Abrir PDF</a>
+              {% else %}
+              <form method="post" action="{% url 'documentos:emitir' c.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-ouro !px-3 !py-1 text-xs"><i class='bx bx-envelope'></i> Gerar carta</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="mt-3 text-sm text-texto-secundario">Ainda não há candidaturas aprovadas.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

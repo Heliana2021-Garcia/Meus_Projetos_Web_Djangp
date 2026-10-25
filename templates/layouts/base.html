@@ -1,0 +1,64 @@
+{% load static %}<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}SIGEST{% endblock %} | INSTIC</title>
+  <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body class="min-h-screen">
+  <header class="border-b border-instic-borda bg-instic-surface">
+    <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+      <div class="flex items-center gap-6">
+        <a href="{% url 'contas:inicio' %}" class="flex items-center gap-2 font-semibold">
+          <i class='bx bxs-graduation text-2xl text-instic-gold'></i> SIGEST
+        </a>
+        {% if user.is_authenticated %}
+        <nav class="flex items-center gap-4 text-sm text-texto-secundario">
+          <a href="{% url 'contas:inicio' %}" class="hover:text-texto-principal">Painel</a>
+          {% if user.e_estudante %}
+          <a href="{% url 'vagas:feed' %}" class="hover:text-texto-principal">Vagas</a>
+          <a href="{% url 'candidaturas:minhas' %}" class="hover:text-texto-principal">Candidaturas</a>
+          {% elif user.e_empresa %}
+          <a href="{% url 'vagas:minhas' %}" class="hover:text-texto-principal">Minhas vagas</a>
+          {% elif user.e_administrador %}
+          <a href="{% url 'relatorios:dashboard' %}" class="hover:text-texto-principal">Relatórios</a>
+          {% endif %}
+        </nav>
+        {% endif %}
+      </div>
+      {% if user.is_authenticated %}
+      <div class="flex items-center gap-4 text-sm">
+        <a href="{% url 'core:notificacoes' %}" class="relative text-texto-secundario hover:text-texto-principal" title="Notificações">
+          <i class='bx bx-bell text-xl'></i>
+          {% if notificacoes_nao_lidas %}
+          <span class="absolute -right-2 -top-2 rounded-full bg-instic-gold px-1.5 text-[10px] font-semibold text-instic-bg">{{ notificacoes_nao_lidas }}</span>
+          {% endif %}
+        </a>
+        <span class="text-texto-secundario">
+          <i class='bx bx-user'></i> {{ user.get_full_name|default:user.username }} &middot; {{ user.get_tipo_display }}
+        </span>
+        <form method="post" action="{% url 'contas:sair' %}">
+          {% csrf_token %}
+          <button type="submit" class="flex items-center gap-1 text-instic-gold hover:underline">
+            <i class='bx bx-log-out'></i> Sair
+          </button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  </header>
+
+  {% if messages %}
+  <div class="mx-auto max-w-6xl space-y-2 px-4 pt-4">
+    {% for m in messages %}
+    <div class="rounded-lg border px-3 py-2 text-sm {% if m.level_tag == 'error' %}border-red-500/40 bg-red-500/10 text-red-300{% else %}border-instic-gold/40 bg-instic-gold/10{% endif %}">{{ m }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <main>{% block conteudo %}{% endblock %}</main>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

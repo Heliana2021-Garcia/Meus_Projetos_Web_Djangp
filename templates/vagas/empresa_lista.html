@@ -1,0 +1,57 @@
+{% extends "layouts/base.html" %}
+{% block titulo %}Minhas vagas{% endblock %}
+{% block conteudo %}
+<div class="mx-auto max-w-6xl px-4 py-10">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h1 class="text-2xl font-semibold">Minhas vagas</h1>
+    <a href="{% url 'vagas:nova' %}" class="btn-ouro"><i class='bx bx-plus'></i> Nova vaga</a>
+  </div>
+
+  {% if not empresa.nif_validado %}
+  <div class="mt-6 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+    <i class='bx bx-time-five'></i> O NIF da empresa ainda não foi validado pela administração. Pode criar rascunhos, mas só poderá publicar vagas depois da validação.
+  </div>
+  {% endif %}
+
+  <div class="mt-6 overflow-x-auto rounded-2xl border border-instic-borda bg-instic-surface">
+    <table class="w-full text-left text-sm">
+      <thead class="text-texto-secundario">
+        <tr><th class="p-3">Vaga</th><th class="p-3">Estado</th><th class="p-3">Lugares</th><th class="p-3">Candidaturas</th><th class="p-3">Limite</th><th class="p-3"></th></tr>
+      </thead>
+      <tbody>
+        {% for vaga in vagas %}
+        <tr class="border-t border-instic-borda">
+          <td class="p-3 font-medium">{{ vaga.titulo }}</td>
+          <td class="p-3">
+            <span class="rounded-full px-2 py-0.5 text-xs
+              {% if vaga.estado == 'ABERTA' %}bg-green-500/15 text-green-300
+              {% elif vaga.estado == 'ENCERRADA' %}bg-red-500/15 text-red-300
+              {% else %}bg-instic-borda text-texto-secundario{% endif %}">{{ vaga.get_estado_display }}</span>
+          </td>
+          <td class="p-3">{{ vaga.numero_vagas }}</td>
+          <td class="p-3">{{ vaga.total_candidaturas }}</td>
+          <td class="p-3">{{ vaga.data_limite|date:"d/m/Y"|default:"—" }}</td>
+          <td class="p-3">
+            <div class="flex justify-end gap-2">
+              <a href="{% url 'candidaturas:kanban' vaga.pk %}" class="rounded-lg border border-instic-gold/50 px-3 py-1 text-xs text-instic-gold hover:bg-instic-gold/10">Candidaturas</a>
+              <a href="{% url 'vagas:editar' vaga.pk %}" class="rounded-lg border border-instic-borda px-3 py-1 text-xs hover:border-instic-gold">Editar</a>
+              {% if vaga.estado != 'ABERTA' %}
+              <form method="post" action="{% url 'vagas:publicar' vaga.pk %}">{% csrf_token %}
+                <button type="submit" class="btn-ouro !px-3 !py-1 text-xs">{% if vaga.estado == 'ENCERRADA' %}Reabrir{% else %}Publicar{% endif %}</button>
+              </form>
+              {% else %}
+              <form method="post" action="{% url 'vagas:encerrar' vaga.pk %}">{% csrf_token %}
+                <button type="submit" class="rounded-lg border border-red-500/40 px-3 py-1 text-xs text-red-300 hover:bg-red-500/10">Encerrar</button>
+              </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="p-8 text-center text-texto-secundario">Ainda não criou nenhuma vaga.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

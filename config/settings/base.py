@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 
 import environ
 
@@ -57,6 +57,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "apps.core.context_processors.notificacoes",
             ],
         },
     },
@@ -64,12 +65,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+if env("DATABASE_URL", default=""):
+    # PostgreSQL (ou outra), definido no .env: DATABASE_URL=postgres://utilizador:palavra-passe@localhost:5432/sigest
+    DATABASES = {"default": env.db("DATABASE_URL")}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
     }
-}
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -95,3 +100,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 AUTH_USER_MODEL = 'contas.Utilizador'
+
+LOGIN_URL = 'contas:entrar'
+LOGIN_REDIRECT_URL = 'contas:inicio'
+LOGOUT_REDIRECT_URL = 'contas:entrar'
+
+DEFAULT_FROM_EMAIL = 'SIGEST <nao-responder@sigest.local>'
+NOTIFICAR_POR_EMAIL = True
+SITE_URL = env('SITE_URL', default='http://127.0.0.1:8000')

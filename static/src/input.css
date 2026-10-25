@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-instic-bg text-texto-principal antialiased;
+  }
+}
+
+@layer components {
+  .btn-ouro {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-instic-gold px-4 py-2 font-medium text-instic-bg transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-instic-gold/50;
+  }
+  .campo {
+    @apply w-full rounded-lg border border-instic-borda bg-instic-bg px-3 py-2 text-texto-principal placeholder:text-texto-secundario focus:border-instic-gold focus:outline-none;
+  }
+}
+@layer base {
+  input[type=checkbox] { @apply accent-instic-gold; }
+}

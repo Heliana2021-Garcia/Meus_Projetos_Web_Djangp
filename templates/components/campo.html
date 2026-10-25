@@ -1,0 +1,18 @@
+<div>
+  <label for="{{ campo.id_for_label }}" class="mb-1 block text-sm text-texto-secundario">{{ campo.label }}</label>
+  {% if campo.widget_type == "checkboxselectmultiple" %}
+    <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      {% for opcao in campo %}
+      <label class="flex items-center gap-2 rounded-lg border border-instic-borda px-3 py-2 text-sm">
+        {{ opcao.tag }} {{ opcao.choice_label }}
+      </label>
+      {% empty %}
+      <p class="col-span-full text-sm text-texto-secundario">Sem opções disponíveis.</p>
+      {% endfor %}
+    </div>
+  {% else %}
+    {{ campo }}
+  {% endif %}
+  {% if campo.help_text %}<div class="mt-1 text-xs text-texto-secundario">{{ campo.help_text }}</div>{% endif %}
+  {% for erro in campo.errors %}<p class="mt-1 text-xs text-red-400">{{ erro }}</p>{% endfor %}
+</div>

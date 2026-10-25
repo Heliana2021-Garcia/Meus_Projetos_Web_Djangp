@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+*.sqlite3
+media/*
+!media/.gitkeep
+staticfiles/
+.env
+node_modules/
+.vscode/
+.idea/
+Thumbs.db

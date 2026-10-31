@@ -31,3 +31,10 @@ from . import views_decisoes  # noqa: E402
 urlpatterns += [
     path("decisoes/", views_decisoes.DecisoesView.as_view(), name="decisoes"),
 ]
+
+
+from .views_gestao import RelatorioGestaoView  # noqa: E402
+
+urlpatterns += [
+    path("gestao/", RelatorioGestaoView.as_view(), name="relatorio_gestao"),
+]

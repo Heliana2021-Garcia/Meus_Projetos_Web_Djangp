@@ -271,3 +271,12 @@ class RotuloEntrarTests(TestCase):
         resposta = self.client.get("/entrar/")
         self.assertContains(resposta, "Email")
         self.assertNotContains(resposta, "Nome de utilizador")
+
+
+class Pagina500Tests(TestCase):
+    def test_pagina_500_existe_e_nao_depende_da_base(self):
+        from django.template.loader import render_to_string
+
+        html = render_to_string("500.html")
+        self.assertIn("Ocorreu um erro", html)
+        self.assertIn("SIGEST", html)

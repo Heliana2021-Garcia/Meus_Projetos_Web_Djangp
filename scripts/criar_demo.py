@@ -59,7 +59,7 @@ def criar():
 
     print("OK cenário de demonstração criado.")
     print(f"Palavra-passe de todas as contas: {senha}")
-    print("Contas: demo_coord (coordenador), demo_estudante, demo_empresa")
+    print("Entrar com o EMAIL: demo_coord@demo.ao (coordenador), demo_estudante@demo.ao, demo_empresa@demo.ao")
     print("O orientador cria-se no ecrã, pela empresa, em 'Orientadores'.")
 
 

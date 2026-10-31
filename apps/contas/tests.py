@@ -221,3 +221,46 @@ class RegistoEValidacaoDeEstudantesTests(TestCase):
         self.assertEqual(resposta.status_code, 403)
         perfil.refresh_from_db()
         self.assertEqual(perfil.registo_estado, PerfilEstudante.Registo.PENDENTE)
+from django.contrib.auth import authenticate, get_user_model  # noqa: E402
+from django.test import TestCase  # noqa: E402
+
+from apps.contas.forms import EntrarForm  # noqa: E402
+
+
+class LoginPorEmailTests(TestCase):
+    def setUp(self):
+        self.User = get_user_model()
+        self.u = self.User.objects.create_user("ana", "Ana@Teste.ao", "Segredo#123", tipo="ESTUDANTE")
+
+    def test_entra_com_email_sem_distinguir_maiusculas(self):
+        self.assertEqual(authenticate(username="ana@TESTE.ao", password="Segredo#123"), self.u)
+
+    def test_nome_de_utilizador_ja_nao_serve(self):
+        self.assertIsNone(authenticate(username="ana", password="Segredo#123"))
+
+    def test_palavra_passe_errada_e_conta_inactiva(self):
+        self.assertIsNone(authenticate(username="ana@teste.ao", password="errada"))
+        self.u.is_active = False
+        self.u.save()
+        self.assertIsNone(authenticate(username="ana@teste.ao", password="Segredo#123"))
+
+    def test_formulario_de_entrada(self):
+        bom = EntrarForm(data={"username": "ANA@teste.ao", "password": "Segredo#123"})
+        self.assertTrue(bom.is_valid())
+        self.assertEqual(bom.get_user(), self.u)
+        mau = EntrarForm(data={"username": "ana", "password": "Segredo#123"})
+        self.assertFalse(mau.is_valid())
+        self.assertIn("incorretos", str(mau.errors))
+
+    def test_orientador_nao_aceita_email_repetido(self):
+        from apps.empresas.forms import OrientadorForm
+
+        dados = {
+            "first_name": "Rui", "last_name": "Silva", "cargo": "", "username": "rui",
+            "email": "ANA@teste.ao", "password1": "Zx!kd83#Qpw", "password2": "Zx!kd83#Qpw",
+        }
+        repetido = OrientadorForm(data=dados, empresa=None)
+        self.assertFalse(repetido.is_valid())
+        self.assertIn("email", repetido.errors)
+        dados["email"] = "rui@teste.ao"
+        self.assertTrue(OrientadorForm(data=dados, empresa=None).is_valid())

@@ -121,3 +121,6 @@ PESOS_AVALIACAO = {
     "ESTUDANTE": 10,
     "COORDENADOR": 30,
 }
+
+# Entrada no sistema com email e palavra-passe (não com nome de utilizador)
+AUTHENTICATION_BACKENDS = ["apps.contas.backends.EmailBackend"]

@@ -23,6 +23,7 @@ class OrientadorForm(EstiloCamposMixin, UserCreationForm):
         super().__init__(*args, **kwargs)
         self.empresa = empresa
         self.fields["first_name"].required = True
+        self.fields["email"].required = True
         self.fields["last_name"].required = True
         self.fields["first_name"].label = "Nome"
         self.fields["last_name"].label = "Apelido"
@@ -35,3 +36,7 @@ class OrientadorForm(EstiloCamposMixin, UserCreationForm):
         return Orientador.objects.create(
             utilizador=utilizador, empresa=self.empresa, cargo=self.cleaned_data["cargo"]
         )
+
+from apps.contas.emails import clean_email_unico  # noqa: E402
+
+OrientadorForm.clean_email = clean_email_unico

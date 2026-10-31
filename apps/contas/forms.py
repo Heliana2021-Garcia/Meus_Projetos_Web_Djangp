@@ -141,3 +141,26 @@ class RegistoEmpresaForm(EstiloCamposMixin, UserCreationForm):
             telefone=self.cleaned_data["telefone"],
         )
         return utilizador
+
+
+# --- Entrada com email -------------------------------------------------------
+from django import forms as django_forms  # noqa: E402
+
+from .emails import clean_email_unico  # noqa: E402
+
+for _nome in ("RegistoEstudanteForm", "RegistoEmpresaForm"):
+    _classe = globals().get(_nome)
+    if _classe is not None and "clean_email" not in _classe.__dict__:
+        _classe.clean_email = clean_email_unico
+
+if "username" in EntrarForm.base_fields:
+    _campo = EntrarForm.base_fields["username"]
+    _campo.label = "Email"
+    _campo.widget = django_forms.EmailInput(attrs={
+        "class": "form-control", "autocomplete": "email",
+        "autofocus": True, "placeholder": "nome@exemplo.ao",
+    })
+    EntrarForm.error_messages = {
+        **EntrarForm.error_messages,
+        "invalid_login": "Email ou palavra-passe incorretos.",
+    }

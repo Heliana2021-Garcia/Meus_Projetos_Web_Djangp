@@ -164,3 +164,14 @@ if "username" in EntrarForm.base_fields:
         **EntrarForm.error_messages,
         "invalid_login": "Email ou palavra-passe incorretos.",
     }
+
+
+# O AuthenticationForm repõe o rótulo no __init__; volta a pô-lo depois.
+if "username" in EntrarForm.base_fields:
+    _init_original = EntrarForm.__init__
+
+    def _init_com_email(self, *args, **kwargs):
+        _init_original(self, *args, **kwargs)
+        self.fields["username"].label = "Email"
+
+    EntrarForm.__init__ = _init_com_email

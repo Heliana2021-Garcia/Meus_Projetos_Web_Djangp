@@ -264,3 +264,10 @@ class LoginPorEmailTests(TestCase):
         self.assertIn("email", repetido.errors)
         dados["email"] = "rui@teste.ao"
         self.assertTrue(OrientadorForm(data=dados, empresa=None).is_valid())
+
+
+class RotuloEntrarTests(TestCase):
+    def test_pagina_de_entrada_pede_email(self):
+        resposta = self.client.get("/entrar/")
+        self.assertContains(resposta, "Email")
+        self.assertNotContains(resposta, "Nome de utilizador")

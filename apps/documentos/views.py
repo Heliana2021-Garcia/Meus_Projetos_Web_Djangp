@@ -14,7 +14,7 @@ from .pdf import gerar_pdf
 
 
 class EmitirCartaView(TipoRequeridoMixin, View):
-    tipos_permitidos = (Utilizador.Tipo.ADMINISTRADOR,)
+    tipos_permitidos = (Utilizador.Tipo.ADMINISTRADOR, Utilizador.Tipo.COORDENADOR)
     http_method_names = ["post"]
 
     def post(self, request, pk):

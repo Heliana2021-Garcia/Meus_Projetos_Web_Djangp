@@ -41,6 +41,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "apps.core.middleware.AuditoriaMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
@@ -103,8 +104,20 @@ AUTH_USER_MODEL = 'contas.Utilizador'
 
 LOGIN_URL = 'contas:entrar'
 LOGIN_REDIRECT_URL = 'contas:inicio'
-LOGOUT_REDIRECT_URL = 'contas:entrar'
+LOGOUT_REDIRECT_URL = 'contas:publica'
 
 DEFAULT_FROM_EMAIL = 'SIGEST <nao-responder@sigest.local>'
 NOTIFICAR_POR_EMAIL = True
 SITE_URL = env('SITE_URL', default='http://127.0.0.1:8000')
+
+# Máximo de estágios activos em simultâneo por orientador empresarial
+MAX_ESTAGIOS_POR_ORIENTADOR = 3
+
+
+# Pesos da avaliação final (percentagens; a nota final é a média pesada)
+PESOS_AVALIACAO = {
+    "EMPRESA": 30,
+    "ORIENTADOR": 30,
+    "ESTUDANTE": 10,
+    "COORDENADOR": 30,
+}

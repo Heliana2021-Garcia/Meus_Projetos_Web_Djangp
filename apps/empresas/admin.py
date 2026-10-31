@@ -1,4 +1,4 @@
-﻿from django.contrib import admin
+from django.contrib import admin
 
 from .models import Empresa
 
@@ -15,3 +15,11 @@ class EmpresaAdmin(admin.ModelAdmin):
     list_filter = ("tipo", "nif_validado")
     search_fields = ("nome", "nif")
     actions = [validar_nifs]
+
+from .models import Orientador  # noqa: E402
+
+
+@admin.register(Orientador)
+class OrientadorAdmin(admin.ModelAdmin):
+    list_display = ("utilizador", "empresa", "cargo")
+    search_fields = ("utilizador__first_name", "utilizador__last_name", "empresa__nome")

@@ -1,87 +1,85 @@
 {% extends "layouts/base.html" %}
-{% block titulo %}Painel da administração{% endblock %}
+{% block titulo %}Painel da coordenação{% endblock %}
 {% block conteudo %}
-<div class="mx-auto max-w-6xl px-4 py-10">
-  <h1 class="text-2xl font-semibold">Painel da administração</h1>
-  <p class="mt-1 text-texto-secundario">Bem-vindo, {{ user.get_full_name|default:user.username }}.</p>
+{% include "components/cabecalho_pagina.html" with titulo="Painel da coordenação" descricao="Validações pendentes e visão geral dos processos de estágio." %}
 
-  <div class="mt-6 grid gap-4 sm:grid-cols-3">
-    <div class="rounded-2xl border border-instic-borda bg-instic-surface p-5">
-      <p class="text-sm text-texto-secundario">Estudantes</p><p class="text-3xl font-semibold">{{ total_estudantes }}</p>
-    </div>
-    <div class="rounded-2xl border border-instic-borda bg-instic-surface p-5">
-      <p class="text-sm text-texto-secundario">Empresas</p><p class="text-3xl font-semibold">{{ total_empresas }}</p>
-    </div>
-    <div class="rounded-2xl border border-instic-borda bg-instic-surface p-5">
-      <p class="text-sm text-texto-secundario">NIF por validar</p><p class="text-3xl font-semibold text-instic-gold">{{ empresas_pendentes|length }}</p>
-    </div>
-  </div>
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-3"><div class="card h-100"><div class="card-body">
+    <p class="small text-secondary mb-1">Estudantes</p><p class="display-6 mb-0">{{ total_estudantes }}</p>
+  </div></div></div>
+  <div class="col-sm-6 col-xl-3"><div class="card h-100"><div class="card-body">
+    <p class="small text-secondary mb-1">Empresas</p><p class="display-6 mb-0">{{ total_empresas }}</p>
+  </div></div></div>
+  <div class="col-sm-6 col-xl-3"><div class="card h-100"><div class="card-body">
+    <p class="small text-secondary mb-1">NIF por validar</p><p class="display-6 mb-0">{{ empresas_pendentes|length }}</p>
+  </div></div></div>
+  <div class="col-sm-6 col-xl-3"><div class="card h-100"><div class="card-body d-flex flex-column justify-content-between">
+    <p class="small text-secondary mb-2">Vagas submetidas</p>
+    <a href="{% url 'relatorios:vagas_analise' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-clipboard-check me-1"></i>Ver vagas em análise</a>
+    <a href="{% url 'relatorios:estudantes_pendentes' %}" class="btn btn-primary btn-sm mt-2"><i class="bi bi-person-check me-1"></i>Registos por validar ({{ registos_pendentes }})</a>
+  </div></div></div>
+</div>
 
-  <div class="mt-8 rounded-2xl border border-instic-borda bg-instic-surface p-5">
-    <h2 class="font-medium">Empresas com NIF por validar</h2>
-    {% if empresas_pendentes %}
-    <div class="mt-3 overflow-x-auto">
-      <table class="w-full text-left text-sm">
-        <thead class="text-texto-secundario">
-          <tr><th class="py-2 pr-4">Empresa</th><th class="py-2 pr-4">NIF</th><th class="py-2 pr-4">Responsável</th><th class="py-2 pr-4">Registo</th><th class="py-2"></th></tr>
-        </thead>
-        <tbody>
-          {% for e in empresas_pendentes %}
-          <tr class="border-t border-instic-borda">
-            <td class="py-2 pr-4">{{ e.nome }}</td>
-            <td class="py-2 pr-4">{{ e.nif }}</td>
-            <td class="py-2 pr-4">{{ e.utilizador.get_full_name|default:e.utilizador.username }}</td>
-            <td class="py-2 pr-4">{{ e.criado_em|date:"d/m/Y" }}</td>
-            <td class="py-2 text-right">
-              <form method="post" action="{% url 'relatorios:validar_nif' e.pk %}">
-                {% csrf_token %}
-                <button type="submit" class="btn-ouro !px-3 !py-1 text-xs"><i class='bx bx-check'></i> Validar NIF</button>
-              </form>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    {% else %}
-    <p class="mt-3 text-sm text-texto-secundario">Não há empresas à espera de validação.</p>
-    {% endif %}
+<div class="card mb-4">
+  <div class="card-header bg-white"><h2 class="h6 mb-0">Empresas com NIF por validar</h2></div>
+  {% if empresas_pendentes %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr><th>Empresa</th><th>NIF</th><th>Responsável</th><th>Registo</th><th></th></tr></thead>
+      <tbody>
+        {% for e in empresas_pendentes %}
+        <tr>
+          <td>{{ e.nome }}</td>
+          <td>{{ e.nif }}</td>
+          <td>{{ e.utilizador.get_full_name|default:e.utilizador.username }}</td>
+          <td>{{ e.criado_em|date:"d/m/Y" }}</td>
+          <td class="text-end">
+            <form method="post" action="{% url 'relatorios:validar_nif' e.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-lg me-1"></i>Validar NIF</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
+  {% else %}
+  <div class="card-body text-secondary small">Não há empresas à espera de validação.</div>
+  {% endif %}
+</div>
 
-  <div class="mt-8 rounded-2xl border border-instic-borda bg-instic-surface p-5">
-    <h2 class="font-medium">Candidaturas aprovadas &middot; cartas de encaminhamento</h2>
-    {% if aprovadas %}
-    <div class="mt-3 overflow-x-auto">
-      <table class="w-full text-left text-sm">
-        <thead class="text-texto-secundario">
-          <tr><th class="py-2 pr-4">Estudante</th><th class="py-2 pr-4">Curso</th><th class="py-2 pr-4">Vaga</th><th class="py-2 pr-4">Empresa</th><th class="py-2 pr-4">Carta</th><th class="py-2"></th></tr>
-        </thead>
-        <tbody>
-          {% for c in aprovadas %}
-          <tr class="border-t border-instic-borda">
-            <td class="py-2 pr-4">{{ c.estudante.utilizador.get_full_name|default:c.estudante.utilizador.username }}<br><span class="text-xs text-texto-secundario">{{ c.estudante.numero_estudante }}</span></td>
-            <td class="py-2 pr-4">{{ c.estudante.curso.sigla }}</td>
-            <td class="py-2 pr-4">{{ c.vaga.titulo }}</td>
-            <td class="py-2 pr-4">{{ c.vaga.empresa.nome }}</td>
-            <td class="py-2 pr-4">{% if c.carta %}{{ c.carta.referencia }}{% else %}<span class="text-texto-secundario">Por emitir</span>{% endif %}</td>
-            <td class="py-2 text-right">
-              {% if c.carta %}
-              <a href="{% url 'documentos:descarregar' c.carta.pk %}" target="_blank" class="btn-ouro !px-3 !py-1 text-xs"><i class='bx bx-file'></i> Abrir PDF</a>
-              {% else %}
-              <form method="post" action="{% url 'documentos:emitir' c.pk %}">
-                {% csrf_token %}
-                <button type="submit" class="btn-ouro !px-3 !py-1 text-xs"><i class='bx bx-envelope'></i> Gerar carta</button>
-              </form>
-              {% endif %}
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    {% else %}
-    <p class="mt-3 text-sm text-texto-secundario">Ainda não há candidaturas aprovadas.</p>
-    {% endif %}
+<div class="card">
+  <div class="card-header bg-white"><h2 class="h6 mb-0">Candidaturas aprovadas e cartas de encaminhamento</h2></div>
+  {% if aprovadas %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr><th>Estudante</th><th>Curso</th><th>Vaga</th><th>Empresa</th><th>Carta</th><th></th></tr></thead>
+      <tbody>
+        {% for c in aprovadas %}
+        <tr>
+          <td>{{ c.estudante.utilizador.get_full_name|default:c.estudante.utilizador.username }}<br><small class="text-secondary">{{ c.estudante.numero_estudante }}</small></td>
+          <td>{{ c.estudante.curso.sigla }}</td>
+          <td>{{ c.vaga.titulo }}</td>
+          <td>{{ c.vaga.empresa.nome }}</td>
+          <td>{% if c.carta %}{{ c.carta.referencia }}{% else %}<span class="text-secondary">Por emitir</span>{% endif %}</td>
+          <td class="text-end">
+            {% if c.carta %}
+            <a href="{% url 'documentos:descarregar' c.carta.pk %}" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm"><i class="bi bi-file-earmark-pdf me-1"></i>Abrir PDF</a>
+            {% else %}
+            <form method="post" action="{% url 'documentos:emitir' c.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-envelope-paper me-1"></i>Gerar carta</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
+  {% else %}
+  <div class="card-body text-secondary small">Ainda não há candidaturas aprovadas.</div>
+  {% endif %}
 </div>
 {% endblock %}

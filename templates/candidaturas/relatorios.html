@@ -1,0 +1,34 @@
+{% extends "layouts/base.html" %}
+{% block titulo %}Relatórios do estágio{% endblock %}
+{% block conteudo %}
+{% include "components/cabecalho_pagina.html" with titulo="Relatórios do estágio" descricao="Escreva os relatórios exigidos e acompanhe a validação." %}
+<div class="sigest-medio">
+  {% if not estagio %}
+  <div class="card"><div class="card-body text-center py-5 text-secondary">
+    <i class="bi bi-file-earmark-text fs-1"></i>
+    <p class="mt-2 mb-0">Os relatórios ficam disponíveis quando tiver um estágio.</p>
+  </div></div>
+  {% else %}
+    {% if not em_curso %}
+    <div class="alert alert-info">Os relatórios só podem ser escritos com o estágio em curso.</div>
+    {% endif %}
+    {% for item in itens %}
+    <article class="card mb-3"><div class="card-body">
+      <div class="d-flex justify-content-between align-items-start gap-2">
+        <h2 class="h6 mb-1">{{ item.rotulo }}</h2>
+        {% if item.obj %}{% include "components/estado_validacao.html" with item=item.obj %}{% else %}<span class="badge text-bg-secondary">Não submetido</span>{% endif %}
+      </div>
+      {% if item.obj %}
+      <p class="small text-secondary mb-2">{{ item.obj.titulo }} · actualizado em {{ item.obj.atualizado_em|date:"d/m/Y" }}</p>
+      {% if item.obj.comentario_orientador %}
+      <div class="alert alert-light border small mb-2"><strong>Orientador:</strong> {{ item.obj.comentario_orientador }}</div>
+      {% endif %}
+      {% endif %}
+      {% if em_curso and not item.obj or em_curso and item.obj.estado != 'VALIDADO' %}
+      <a href="{% url 'candidaturas:relatorio' item.slug %}" class="btn btn-outline-primary btn-sm">{% if item.obj %}Editar{% else %}Escrever{% endif %}</a>
+      {% endif %}
+    </div></article>
+    {% endfor %}
+  {% endif %}
+</div>
+{% endblock %}

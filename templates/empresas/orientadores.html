@@ -1,0 +1,41 @@
+{% extends "layouts/base.html" %}
+{% block titulo %}Orientadores{% endblock %}
+{% block conteudo %}
+{% include "components/cabecalho_pagina.html" with titulo="Orientadores" descricao="Funcionários da sua empresa que acompanham os estagiários." %}
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header bg-white"><h2 class="h6 mb-0">Os seus orientadores</h2></div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th>Nome</th><th>Cargo</th><th>Utilizador</th><th>Estágios activos</th></tr></thead>
+          <tbody>
+            {% for o in orientadores %}
+            <tr>
+              <td>{{ o.utilizador.get_full_name }}<br><small class="text-secondary">{{ o.utilizador.email }}</small></td>
+              <td>{{ o.cargo|default:"—" }}</td>
+              <td>{{ o.utilizador.username }}</td>
+              <td>{{ o.total_activos }} / {{ o.limite_estagios }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-center text-secondary py-4">Ainda não criou nenhum orientador. Use o formulário ao lado.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card"><div class="card-body p-4">
+      <h2 class="h6 mb-3">Novo orientador</h2>
+      <p class="small text-secondary">O orientador entra no SIGEST com o nome de utilizador e a palavra-passe que definir aqui.</p>
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="alert alert-danger py-2 small">{{ form.non_field_errors.0 }}</div>{% endif %}
+        {% for campo in form %}{% include "components/campo.html" %}{% endfor %}
+        <button type="submit" class="btn btn-primary">Criar orientador</button>
+      </form>
+    </div></div>
+  </div>
+</div>
+{% endblock %}

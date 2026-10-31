@@ -1,4 +1,4 @@
-﻿from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Case, IntegerField, Q, Value, When
 from django.utils import timezone
@@ -39,6 +39,7 @@ class Vaga(ModeloBase):
 
     class Estado(models.TextChoices):
         RASCUNHO = "RASCUNHO", "Rascunho"
+        EM_ANALISE = "EM_ANALISE", "Em análise"
         ABERTA = "ABERTA", "Aberta"
         ENCERRADA = "ENCERRADA", "Encerrada"
 
@@ -69,6 +70,32 @@ class Vaga(ModeloBase):
         "estado", max_length=10, choices=Estado.choices, default=Estado.RASCUNHO
     )
 
+    motivo_devolucao = models.TextField("motivo da devolução", blank=True)
+
+    class Tipo(models.TextChoices):
+        CURRICULAR = "CURRICULAR", "Curricular"
+        PROFISSIONAL = "PROFISSIONAL", "Profissional"
+
+    area = models.CharField("área de estágio", max_length=100, blank=True)
+    tipo_estagio = models.CharField(
+        "tipo de estágio", max_length=12, choices=Tipo.choices, default=Tipo.CURRICULAR
+    )
+    documentos_exigidos = models.TextField(
+        "documentos obrigatórios",
+        blank=True,
+        help_text="Um por linha. Ex.: currículo, certificado de habilitações.",
+    )
+    fase_teste = models.BooleanField(
+        "teste psicotécnico", default=True,
+        help_text="Fase de selecção. A decisão final existe sempre, no fim do processo.",
+    )
+    fase_curriculo = models.BooleanField(
+        "análise do currículo", default=False, help_text="Fase de selecção."
+    )
+    fase_entrevista = models.BooleanField(
+        "entrevista presencial", default=True, help_text="Fase de selecção."
+    )
+
     objects = VagaQuerySet.as_manager()
 
     class Meta:
@@ -82,11 +109,11 @@ class Vaga(ModeloBase):
     def clean(self):
         if (
             self.empresa_id
-            and self.estado == self.Estado.ABERTA
+            and self.estado in (self.Estado.ABERTA, self.Estado.EM_ANALISE)
             and not self.empresa.nif_validado
         ):
             raise ValidationError(
-                {"estado": "A vaga só pode ser publicada depois de a administração validar o NIF da empresa."}
+                {"estado": "A vaga só pode ser submetida depois de o INSTIC aprovar a parceria (validação do NIF da empresa)."}
             )
 
     @property
@@ -123,6 +150,26 @@ class Vaga(ModeloBase):
         self.estado = self.Estado.ENCERRADA
         self.save(update_fields=["estado", "atualizado_em"])
 
+    def submeter(self):
+        """A empresa envia a vaga para o INSTIC aprovar."""
+        anterior = self.estado
+        self.estado = self.Estado.EM_ANALISE
+        try:
+            self.full_clean()
+        except ValidationError:
+            self.estado = anterior
+            raise
+        self.motivo_devolucao = ""
+        self.save(update_fields=["estado", "motivo_devolucao", "atualizado_em"])
+
+    def devolver(self, motivo):
+        """O INSTIC devolve a vaga à empresa, com o motivo."""
+        if not motivo.strip():
+            raise ValidationError("Indique o motivo da devolução.")
+        self.estado = self.Estado.RASCUNHO
+        self.motivo_devolucao = motivo.strip()
+        self.save(update_fields=["estado", "motivo_devolucao", "atualizado_em"])
+
     def aceita_curso(self, curso):
         return not self.cursos.exists() or self.cursos.filter(pk=curso.pk).exists()
 
@@ -138,3 +185,25 @@ class Vaga(ModeloBase):
             return 100
         em_falta = self.tecnologias_em_falta(perfil).count()
         return round(100 * (total - em_falta) / total)
+
+    ESTADOS_PROCESSO = ("PENDENTE", "TESTE", "CURRICULO", "ENTREVISTA", "PROPOSTA", "APROVADO")
+    FASES = (
+        ("TESTE", "fase_teste", "Teste psicotécnico"),
+        ("CURRICULO", "fase_curriculo", "Análise do currículo"),
+        ("ENTREVISTA", "fase_entrevista", "Entrevista presencial"),
+    )
+
+    def fases_activas(self):
+        """Fases opcionais que esta vaga activou."""
+        return [estado for estado, campo, _ in self.FASES if getattr(self, campo)]
+
+    def estados_do_processo(self):
+        """Sequência de estados de uma candidatura a esta vaga, pela ordem do processo."""
+        opcionais = set(self.fases_activas())
+        fixos = {"PENDENTE", "PROPOSTA", "APROVADO"}
+        return [e for e in self.ESTADOS_PROCESSO if e in fixos or e in opcionais]
+
+    @property
+    def rotulos_processo(self):
+        fases = [rotulo for _, campo, rotulo in self.FASES if getattr(self, campo)]
+        return fases + ["Decisão final"]

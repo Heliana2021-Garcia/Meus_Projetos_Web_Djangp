@@ -2,13 +2,19 @@ from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
-from django.views.generic import FormView
+from django.urls import reverse
+from django.views.generic import FormView, TemplateView
 
 from .forms import RegistoEmpresaForm, RegistoEstudanteForm
+from apps.core.notificacoes import notificar_gestao
+from apps.estudantes.models import PerfilEstudante
+
 from .models import Utilizador
 
 PAINEL_POR_TIPO = {
     Utilizador.Tipo.ADMINISTRADOR: "relatorios:painel",
+    Utilizador.Tipo.COORDENADOR: "relatorios:painel",
+    Utilizador.Tipo.ORIENTADOR: "empresas:painel_orientador",
     Utilizador.Tipo.ESTUDANTE: "estudantes:painel",
     Utilizador.Tipo.EMPRESA: "empresas:painel",
 }
@@ -30,6 +36,12 @@ class RegistoBaseView(FormView):
 
     def form_valid(self, form):
         utilizador = form.save()
+        if utilizador.tipo == Utilizador.Tipo.ESTUDANTE:
+            notificar_gestao(
+                "Novo registo de estudante",
+                f"{utilizador.get_full_name()} registou-se e aguarda validação.",
+                reverse("relatorios:estudantes_pendentes"),
+            )
         login(self.request, utilizador)
         messages.success(self.request, self.mensagem_sucesso)
         return redirect("contas:inicio")
@@ -37,7 +49,7 @@ class RegistoBaseView(FormView):
 
 class RegistoEstudanteView(RegistoBaseView):
     form_class = RegistoEstudanteForm
-    mensagem_sucesso = "Conta de estudante criada. Complete o seu perfil para se candidatar."
+    mensagem_sucesso = "Conta criada. A coordenação vai validar o seu registo e os documentos antes de poder candidatar-se."
     extra_context = {
         "titulo_pagina": "Registo de estudante",
         "subtitulo_pagina": "Crie a sua conta para se candidatar a estágios.",
@@ -46,8 +58,17 @@ class RegistoEstudanteView(RegistoBaseView):
 
 class RegistoEmpresaView(RegistoBaseView):
     form_class = RegistoEmpresaForm
-    mensagem_sucesso = "Conta de empresa criada. O NIF será validado pela administração."
+    mensagem_sucesso = "Pedido de parceria enviado ao INSTIC. Será avisado quando for aprovado."
     extra_context = {
-        "titulo_pagina": "Registo de empresa",
-        "subtitulo_pagina": "Registe a sua empresa para publicar vagas de estágio.",
+        "titulo_pagina": "Pedido de parceria",
+        "subtitulo_pagina": "Peça parceria ao INSTIC. Depois de aprovada, poderá submeter vagas de estágio.",
     }
+
+class PaginaPublicaView(TemplateView):
+    template_name = "publico/inicio.html"
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        contexto["ano_minimo"] = PerfilEstudante.ANO_MINIMO_CANDIDATURA
+        contexto["media_minima"] = PerfilEstudante.MEDIA_MINIMA_CANDIDATURA
+        return contexto

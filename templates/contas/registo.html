@@ -1,25 +1,25 @@
-{% extends "layouts/base.html" %}
+{% extends "layouts/publico.html" %}
 {% block titulo %}{{ titulo_pagina }}{% endblock %}
 {% block conteudo %}
-<div class="mx-auto max-w-lg px-4 py-12">
-  <div class="rounded-2xl border border-instic-borda bg-instic-surface p-8">
-    <h1 class="text-2xl font-semibold">{{ titulo_pagina }}</h1>
-    <p class="mb-6 mt-1 text-sm text-texto-secundario">{{ subtitulo_pagina }}</p>
-    <form method="post" class="space-y-4" novalidate>
-      {% csrf_token %}
-      {% if form.non_field_errors %}
-      <div class="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">
-        {{ form.non_field_errors.0 }}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-10 col-lg-7 col-xl-6">
+      <div class="card shadow-sm">
+        <div class="card-body p-4">
+          <h1 class="h4 sigest-titulo mb-1">{{ titulo_pagina }}</h1>
+          <p class="text-secondary mb-4">{{ subtitulo_pagina }}</p>
+          <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger py-2 small" role="alert">{{ form.non_field_errors.0 }}</div>
+            {% endif %}
+            {% for campo in form %}{% include "components/campo.html" %}{% endfor %}
+            <button type="submit" class="btn btn-primary w-100">Criar conta</button>
+          </form>
+          <p class="small text-center text-secondary mt-4 mb-0">Já tem conta? <a href="{% url 'contas:entrar' %}">Entrar</a></p>
+        </div>
       </div>
-      {% endif %}
-      {% for campo in form %}
-        {% include "components/campo.html" %}
-      {% endfor %}
-      <button type="submit" class="btn-ouro w-full">Criar conta</button>
-    </form>
-    <p class="mt-6 text-center text-sm text-texto-secundario">
-      Já tem conta? <a href="{% url 'contas:entrar' %}" class="text-instic-gold hover:underline">Entrar</a>
-    </p>
+    </div>
   </div>
 </div>
 {% endblock %}

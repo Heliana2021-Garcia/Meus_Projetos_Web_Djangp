@@ -14,9 +14,8 @@
 
   function aviso(texto, erro) {
     const div = document.createElement("div");
-    div.className =
-      "fixed bottom-4 right-4 z-50 max-w-sm rounded-lg border bg-instic-surface px-4 py-3 text-sm shadow-lg " +
-      (erro ? "border-red-500/60 text-red-300" : "border-instic-gold/60 text-texto-principal");
+    div.className = "sigest-aviso alert shadow " + (erro ? "alert-danger" : "alert-success");
+    div.setAttribute("role", "alert");
     div.textContent = texto;
     document.body.appendChild(div);
     setTimeout(function () { div.remove(); }, 5000);
@@ -53,16 +52,16 @@
       cartao = el;
       e.dataTransfer.effectAllowed = "move";
       e.dataTransfer.setData("text/plain", el.dataset.id);
-      el.classList.add("opacity-40");
+      el.classList.add("a-arrastar");
       const ok = permitidos(el);
       colunas.forEach(function (c) {
-        if (ok.indexOf(c.dataset.estado) !== -1) c.classList.add("ring-2", "ring-instic-gold/70");
+        if (ok.indexOf(c.dataset.estado) !== -1) c.classList.add("alvo-possivel");
       });
     });
     el.addEventListener("dragend", function () {
-      el.classList.remove("opacity-40");
+      el.classList.remove("a-arrastar");
       colunas.forEach(function (c) {
-        c.classList.remove("ring-2", "ring-instic-gold/70", "bg-instic-gold/5");
+        c.classList.remove("alvo-possivel", "alvo-activo");
       });
       cartao = null;
     });
@@ -72,15 +71,15 @@
     coluna.addEventListener("dragover", function (e) {
       if (cartao && permitidos(cartao).indexOf(coluna.dataset.estado) !== -1) {
         e.preventDefault();
-        coluna.classList.add("bg-instic-gold/5");
+        coluna.classList.add("alvo-activo");
       }
     });
     coluna.addEventListener("dragleave", function () {
-      coluna.classList.remove("bg-instic-gold/5");
+      coluna.classList.remove("alvo-activo");
     });
     coluna.addEventListener("drop", function (e) {
       e.preventDefault();
-      coluna.classList.remove("bg-instic-gold/5");
+      coluna.classList.remove("alvo-activo");
       if (!cartao) return;
       const destino = coluna.dataset.estado;
       if (destino === cartao.dataset.estado) return;

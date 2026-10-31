@@ -1,0 +1,15 @@
+{% extends "layouts/base.html" %}
+{% block titulo %}Avaliar estágio{% endblock %}
+{% block conteudo %}
+{% include "components/cabecalho_pagina.html" with titulo="A minha avaliação" descricao="Cada critério vale de 0 a 20; a nota é a média dos cinco." %}
+<div class="sigest-estreito"><div class="card"><div class="card-body p-4">
+  <p class="small text-secondary">{{ c.estudante.utilizador.get_full_name|default:c.estudante.utilizador.username }} · {{ c.vaga.titulo }}<br>
+  Avalia como: <strong>{{ papel_rotulo }}</strong> (peso de {{ peso }}% na nota final)</p>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% for campo in form %}{% include "components/campo.html" %}{% endfor %}
+    <button type="submit" class="btn btn-primary">Guardar avaliação</button>
+    <a href="{% url 'candidaturas:avaliacao' c.pk %}" class="btn btn-outline-secondary">Cancelar</a>
+  </form>
+</div></div></div>
+{% endblock %}

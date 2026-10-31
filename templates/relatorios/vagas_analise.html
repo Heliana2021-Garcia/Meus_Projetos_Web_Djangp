@@ -1,0 +1,56 @@
+{% extends "layouts/base.html" %}
+{% block titulo %}Vagas em análise{% endblock %}
+{% block conteudo %}
+{% include "components/cabecalho_pagina.html" with titulo="Vagas em análise" descricao="As vagas só ficam visíveis aos estudantes depois de aprovadas pela coordenação." %}
+<div class="sigest-medio">
+  {% for vaga in vagas %}
+  <article class="card mb-3"><div class="card-body">
+    <div class="d-flex justify-content-between align-items-start gap-2">
+      <div>
+        <h2 class="h5 mb-1">{{ vaga.titulo }}</h2>
+        <p class="small text-secondary mb-0">{{ vaga.empresa.nome }} · NIF {{ vaga.empresa.nif }}</p>
+      </div>
+      {% if vaga.empresa.e_parceira %}<span class="badge text-bg-warning"><i class="bi bi-star-fill me-1"></i>Parceira</span>{% endif %}
+    </div>
+
+    <p class="small text-secondary d-flex flex-wrap gap-3 mt-3 mb-2">
+      <span><i class="bi bi-briefcase me-1"></i>{{ vaga.get_tipo_estagio_display }} · {{ vaga.get_modalidade_display }}</span>
+      {% if vaga.area %}<span><i class="bi bi-diagram-3 me-1"></i>{{ vaga.area }}</span>{% endif %}
+      <span><i class="bi bi-geo-alt me-1"></i>{{ vaga.localizacao|default:"—" }}</span>
+      <span><i class="bi bi-hourglass-split me-1"></i>{{ vaga.duracao_meses }} meses</span>
+      <span><i class="bi bi-people me-1"></i>{{ vaga.numero_vagas }} lugar{{ vaga.numero_vagas|pluralize:"es" }}</span>
+      {% if vaga.data_limite %}<span><i class="bi bi-calendar-event me-1"></i>até {{ vaga.data_limite|date:"d/m/Y" }}</span>{% endif %}
+    </p>
+
+    {% if vaga.descricao %}<div class="small text-secondary">{{ vaga.descricao|linebreaks }}</div>{% endif %}
+    {% if vaga.requisitos %}<div class="small text-secondary"><strong>Requisitos:</strong> {{ vaga.requisitos|linebreaksbr }}</div>{% endif %}
+    {% if vaga.documentos_exigidos %}<div class="small text-secondary"><strong>Documentos obrigatórios:</strong> {{ vaga.documentos_exigidos|linebreaksbr }}</div>{% endif %}
+
+    <p class="small text-secondary mt-3 mb-1"><strong>Processo de selecção:</strong> {% for r in vaga.rotulos_processo %}{{ r }}{% if not forloop.last %} → {% endif %}{% endfor %}</p>
+    <p class="small text-secondary mb-1">Cursos: {% for c in vaga.cursos.all %}{{ c.sigla }}{% if not forloop.last %}, {% endif %}{% empty %}todos{% endfor %}</p>
+    <div class="d-flex flex-wrap gap-1 mb-3">
+      {% for t in vaga.tecnologias.all %}<span class="badge rounded-pill text-bg-light border">{{ t }}</span>{% endfor %}
+    </div>
+
+    <div class="d-flex flex-wrap align-items-start gap-2">
+      <form method="post" action="{% url 'relatorios:aprovar_vaga' vaga.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Aprovar e publicar</button>
+      </form>
+      <details>
+        <summary class="btn btn-outline-danger">Devolver à empresa</summary>
+        <form method="post" action="{% url 'relatorios:devolver_vaga' vaga.pk %}" class="mt-2" style="width: 20rem; max-width: 100%;">
+          {% csrf_token %}
+          <textarea name="motivo" rows="3" required class="form-control mb-2" placeholder="Motivo da devolução (obrigatório)"></textarea>
+          <button type="submit" class="btn btn-danger w-100">Confirmar devolução</button>
+        </form>
+      </details>
+    </div>
+  </div></article>
+  {% empty %}
+  <div class="card"><div class="card-body text-center py-5 text-secondary">
+    <i class="bi bi-clipboard-check fs-1"></i><p class="mt-2 mb-0">Não há vagas à espera de aprovação.</p>
+  </div></div>
+  {% endfor %}
+</div>
+{% endblock %}

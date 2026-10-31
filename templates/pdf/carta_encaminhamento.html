@@ -15,7 +15,7 @@
   }
   body { font-family: Helvetica; font-size: 11pt; line-height: 140%; color: #111111; }
   .timbre { text-align: center; border-bottom: 2px solid #c5a059; padding-bottom: 8px; margin-bottom: 18px; }
-  .timbre img { height: 70px; }
+  
   .universidade { font-size: 13pt; font-weight: bold; }
   .instituto { font-size: 10pt; }
   .oficio { text-align: right; font-size: 10pt; margin-bottom: 14px; }
@@ -32,9 +32,9 @@
 <body>
 
   <div class="timbre">
-    {% if logo %}<img src="{{ logo }}"><br/>{% endif %}
-    <div class="universidade">{{ config.UNIVERSIDADE }}</div>
-    <div class="instituto">{{ config.INSTITUTO }}</div>
+    {% if logo %}<table width="100%"><tr><td align="center" style="padding: 6px;"><img src="{{ logo }}" style="width: 300px;"></td></tr></table>{% endif %}
+    {% if not logo %}<div class="universidade">{{ config.UNIVERSIDADE }}</div>
+    <div class="instituto">{{ config.INSTITUTO }}</div>{% endif %}
   </div>
 
   <div class="oficio">

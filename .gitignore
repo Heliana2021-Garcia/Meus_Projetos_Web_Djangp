@@ -15,3 +15,10 @@ scripts/tailwindcss.exe
 scripts/tailwindcss.exe
 dados.json
 db-backup.sqlite3
+
+# Documentos privados dos estudantes
+privado/
+media/
+backups/
+*.pyc
+db.sqlite3

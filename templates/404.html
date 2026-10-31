@@ -1,10 +1,10 @@
-{% extends "layouts/base.html" %}
+{% extends "layouts/publico.html" %}
 {% block titulo %}Página não encontrada{% endblock %}
 {% block conteudo %}
-<div class="mx-auto max-w-lg px-4 py-24 text-center">
-  <i class='bx bx-search-alt text-5xl text-instic-gold'></i>
-  <h1 class="mt-4 text-2xl font-semibold">Página não encontrada</h1>
-  <p class="mt-2 text-texto-secundario">O endereço que abriu não existe ou já não está disponível.</p>
-  <a href="{% url 'contas:inicio' %}" class="btn-ouro mt-6">Voltar ao início</a>
+<div class="container py-5 text-center">
+  <i class="bi bi-search fs-1 text-primary"></i>
+  <h1 class="h3 mt-3">Página não encontrada</h1>
+  <p class="text-secondary">O endereço que abriu não existe ou já não está disponível.</p>
+  <a href="{% url 'contas:publica' %}" class="btn btn-primary">Voltar ao início</a>
 </div>
 {% endblock %}

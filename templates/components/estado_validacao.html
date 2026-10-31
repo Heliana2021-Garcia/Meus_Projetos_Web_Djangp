@@ -1,0 +1,3 @@
+{% if item.estado == 'VALIDADO' %}<span class="badge text-bg-success"><i class="bi bi-check-circle me-1"></i>Validado</span>
+{% elif item.estado == 'CORRECAO' %}<span class="badge text-bg-danger"><i class="bi bi-exclamation-circle me-1"></i>Correcção pedida</span>
+{% else %}<span class="badge text-bg-warning"><i class="bi bi-hourglass-split me-1"></i>Por validar</span>{% endif %}

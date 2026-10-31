@@ -1,0 +1,50 @@
+{% extends "layouts/base.html" %}
+{% block titulo %}Estágios{% endblock %}
+{% block conteudo %}
+{% include "components/cabecalho_pagina.html" with titulo="Estágios" descricao="Acompanhe os estágios de todas as empresas e interrompa-os quando necessário." %}
+<div class="card">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead><tr><th>Estudante</th><th>Empresa / vaga</th><th>Orientador</th><th>Estado</th><th>Período</th><th></th></tr></thead>
+      <tbody>
+        {% for e in estagios %}
+        <tr>
+          <td>{{ e.estudante.utilizador.get_full_name|default:e.estudante.utilizador.username }}<br><small class="text-secondary">{{ e.estudante.numero_estudante }} · {{ e.estudante.curso.sigla }}</small></td>
+          <td>{{ e.vaga.empresa.nome }}<br><small class="text-secondary">{{ e.vaga.titulo }}</small></td>
+          <td>{{ e.orientador.utilizador.get_full_name|default:"—" }}</td>
+          <td>
+            {% include "components/estado_estagio.html" with c=e %}<br><a href="{% url 'candidaturas:acompanhar' e.pk %}" class="small">Acompanhamento</a>
+            {% if e.estagio_estado == 'INTERROMPIDO' %}<br><small class="text-secondary">{{ e.motivo_interrupcao }}</small>{% endif %}
+          </td>
+          <td>{% if e.data_inicio %}{{ e.data_inicio|date:"d/m/Y" }} a {{ e.data_fim|date:"d/m/Y" }}{% else %}—{% endif %}</td>
+          <td class="text-end">
+            {% if e.estagio_aberto %}
+            <details>
+              <summary class="btn btn-outline-danger btn-sm">Interromper</summary>
+              <form method="post" action="{% url 'candidaturas:interromper' e.pk %}" class="mt-2 text-start" style="width: 18rem; max-width: 100%;">
+                {% csrf_token %}
+                <textarea name="motivo" rows="3" required class="form-control mb-2" placeholder="Motivo (obrigatório)"></textarea>
+                <button type="submit" class="btn btn-danger btn-sm w-100">Confirmar interrupção</button>
+              </form>
+            </details>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center text-secondary py-5">Ainda não há estágios.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if is_paginated %}
+<nav class="mt-4" aria-label="Paginação">
+  <ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a></li>{% endif %}
+    <li class="page-item disabled"><span class="page-link">Página {{ page_obj.number }} de {{ paginator.num_pages }}</span></li>
+    {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Seguinte</a></li>{% endif %}
+  </ul>
+</nav>
+{% endif %}
+{% endblock %}

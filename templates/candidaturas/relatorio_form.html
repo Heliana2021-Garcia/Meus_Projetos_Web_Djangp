@@ -1,0 +1,16 @@
+{% extends "layouts/base.html" %}
+{% block titulo %}{{ rotulo }}{% endblock %}
+{% block conteudo %}
+{% include "components/cabecalho_pagina.html" with titulo=rotulo descricao="Depois de guardar, o relatório é enviado ao orientador para validação." %}
+<div class="sigest-medio"><div class="card"><div class="card-body p-4">
+  {% if relatorio.comentario_orientador %}
+  <div class="alert alert-warning small"><strong>Orientador:</strong> {{ relatorio.comentario_orientador }}</div>
+  {% endif %}
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% for campo in form %}{% include "components/campo.html" %}{% endfor %}
+    <button type="submit" class="btn btn-primary">Guardar e enviar</button>
+    <a href="{% url 'candidaturas:relatorios' %}" class="btn btn-outline-secondary">Cancelar</a>
+  </form>
+</div></div></div>
+{% endblock %}

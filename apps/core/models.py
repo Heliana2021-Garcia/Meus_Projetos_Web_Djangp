@@ -41,3 +41,23 @@ class Notificacao(ModeloBase):
 
     def __str__(self):
         return f"{self.titulo} → {self.destinatario}"
+class RegistoDecisao(models.Model):
+    """Histórico de decisões relevantes: quem fez, o quê e quando. Só se acrescenta."""
+
+    utilizador = models.ForeignKey(
+        "contas.Utilizador", null=True, blank=True, on_delete=models.SET_NULL,
+        related_name="+", verbose_name="utilizador",
+    )
+    nome_utilizador = models.CharField("utilizador", max_length=200)
+    accao = models.CharField("acção", max_length=120)
+    referencia = models.CharField("referência", max_length=150, blank=True)
+    detalhe = models.TextField("detalhe", blank=True)
+    criado_em = models.DateTimeField("data", auto_now_add=True)
+
+    class Meta:
+        ordering = ["-criado_em", "-pk"]
+        verbose_name = "registo de decisão"
+        verbose_name_plural = "registo de decisões"
+
+    def __str__(self):
+        return f"{self.criado_em:%d/%m/%Y %H:%M} · {self.nome_utilizador} · {self.accao}"

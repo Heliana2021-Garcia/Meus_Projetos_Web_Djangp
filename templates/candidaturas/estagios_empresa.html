@@ -1,0 +1,95 @@
+{% extends "layouts/base.html" %}
+{% block titulo %}Estágios{% endblock %}
+{% block conteudo %}
+{% include "components/cabecalho_pagina.html" with titulo="Estágios" descricao="Atribua o orientador, confirme o início e acompanhe os estagiários." %}
+
+{% if not orientadores %}
+<div class="alert alert-warning">
+  Ainda não tem orientadores. <a href="{% url 'empresas:orientadores' %}">Crie um orientador</a> para poder atribuir os estagiários.
+</div>
+{% endif %}
+
+<div class="sigest-medio">
+  {% for e in estagios %}
+  <article class="card mb-3"><div class="card-body">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+      <div>
+        <h2 class="h5 mb-1">{{ e.estudante.utilizador.get_full_name|default:e.estudante.utilizador.username }}</h2>
+        <p class="small text-secondary mb-0">{{ e.estudante.numero_estudante }} · {{ e.estudante.curso.sigla }} · {{ e.vaga.titulo }}</p>
+      </div>
+      {% include "components/estado_estagio.html" with c=e %}
+    </div>
+
+    <p class="mb-0 mt-2"><a href="{% url 'candidaturas:acompanhar' e.pk %}" class="small">Ver diário e relatórios</a></p>
+    <dl class="row small mt-3 mb-2">
+      <dt class="col-sm-4 text-secondary fw-normal">Orientador</dt>
+      <dd class="col-sm-8">{{ e.orientador.utilizador.get_full_name|default:"Ainda não atribuído" }}</dd>
+      <dt class="col-sm-4 text-secondary fw-normal">Confirmação de início</dt>
+      <dd class="col-sm-8">
+        Empresa: {% if e.inicio_confirmado_empresa %}confirmado em {{ e.inicio_confirmado_empresa|date:"d/m/Y" }}{% else %}pendente{% endif %}
+        · Estudante: {% if e.inicio_confirmado_estudante %}confirmado em {{ e.inicio_confirmado_estudante|date:"d/m/Y" }}{% else %}pendente{% endif %}
+      </dd>
+      {% if e.data_inicio %}
+      <dt class="col-sm-4 text-secondary fw-normal">Período</dt>
+      <dd class="col-sm-8">{{ e.data_inicio|date:"d/m/Y" }} a {{ e.data_fim|date:"d/m/Y" }} (prevista)</dd>
+      {% endif %}
+      {% if e.estagio_estado == 'INTERROMPIDO' %}
+      <dt class="col-sm-4 text-secondary fw-normal">Interrupção</dt>
+      <dd class="col-sm-8">{{ e.interrompido_em|date:"d/m/Y" }} · {{ e.interrompido_por.get_full_name|default:e.interrompido_por.username }} · {{ e.motivo_interrupcao }}</dd>
+      {% endif %}
+    </dl>
+
+    {% if e.estagio_estado == 'CONCLUIDO' %}
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      <span class="small">Efectivação na empresa:</span>
+      {% if e.efectivado is None %}
+      <form method="post" action="{% url 'candidaturas:efectivacao' e.pk %}" class="d-flex gap-2">
+        {% csrf_token %}
+        <button type="submit" name="resultado" value="sim" class="btn btn-outline-success btn-sm">Foi efectivado</button>
+        <button type="submit" name="resultado" value="nao" class="btn btn-outline-secondary btn-sm">Não efectivado</button>
+      </form>
+      {% else %}
+      <strong>{% if e.efectivado %}Efectivado{% else %}Não efectivado{% endif %}</strong>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% if e.estagio_aberto %}
+    <div class="d-flex flex-wrap align-items-start gap-3">
+      <form method="post" action="{% url 'candidaturas:atribuir_orientador' e.pk %}" class="d-flex gap-2">
+        {% csrf_token %}
+        <select name="orientador" class="form-select form-select-sm" required aria-label="Orientador">
+          <option value="">Seleccione o orientador</option>
+          {% for o in orientadores %}
+          <option value="{{ o.pk }}" {% if e.orientador_id == o.pk %}selected{% endif %}>{{ o.utilizador.get_full_name|default:o.utilizador.username }} ({{ o.total_activos }}/{{ o.limite_estagios }})</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-outline-primary btn-sm">Atribuir</button>
+      </form>
+
+      {% if e.estagio_estado == 'POR_INICIAR' and e.orientador_id and not e.inicio_confirmado_empresa %}
+      <form method="post" action="{% url 'candidaturas:confirmar_inicio' e.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-lg me-1"></i>Confirmar início</button>
+      </form>
+      {% endif %}
+
+      <details>
+        <summary class="btn btn-outline-danger btn-sm">Interromper estágio</summary>
+        <form method="post" action="{% url 'candidaturas:interromper' e.pk %}" class="mt-2" style="width: 20rem; max-width: 100%;">
+          {% csrf_token %}
+          <textarea name="motivo" rows="3" required class="form-control mb-2" placeholder="Motivo da interrupção (obrigatório)"></textarea>
+          <button type="submit" class="btn btn-danger w-100">Confirmar interrupção</button>
+        </form>
+      </details>
+    </div>
+    {% endif %}
+  </div></article>
+  {% empty %}
+  <div class="card"><div class="card-body text-center py-5 text-secondary">
+    <i class="bi bi-briefcase fs-1"></i>
+    <p class="mt-2 mb-0">Ainda não há estagiários. Aparecem aqui quando aprovar uma candidatura.</p>
+  </div></div>
+  {% endfor %}
+</div>
+{% endblock %}

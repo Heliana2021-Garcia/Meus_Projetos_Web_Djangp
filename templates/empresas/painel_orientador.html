@@ -1,0 +1,34 @@
+{% extends "layouts/base.html" %}
+{% block titulo %}Painel do orientador{% endblock %}
+{% block conteudo %}
+{% include "components/cabecalho_pagina.html" with titulo="Painel do orientador" descricao="Os estagiários que lhe foram atribuídos." %}
+{% if orientador %}
+<p class="text-secondary">{{ orientador.empresa.nome }}{% if orientador.cargo %} · {{ orientador.cargo }}{% endif %} · estágios activos: <strong>{{ orientador.total_activos }} / {{ orientador.limite_estagios }}</strong></p>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead><tr><th>Estagiário</th><th>Curso</th><th>Vaga</th><th>Estado</th><th>Período</th><th>Por validar</th><th></th></tr></thead>
+      <tbody>
+        {% for e in estagios %}
+        <tr>
+          <td>{{ e.estudante.utilizador.get_full_name|default:e.estudante.utilizador.username }}<br><small class="text-secondary">{{ e.estudante.numero_estudante }}</small></td>
+          <td>{{ e.estudante.curso.sigla }}</td>
+          <td>{{ e.vaga.titulo }}</td>
+          <td>{% include "components/estado_estagio.html" with c=e %}</td>
+          <td>{% if e.data_inicio %}{{ e.data_inicio|date:"d/m/Y" }} a {{ e.data_fim|date:"d/m/Y" }}{% else %}<span class="text-secondary">—</span>{% endif %}</td>
+          <td>{% if e.acompanhamento_por_validar %}<span class="badge text-bg-warning">{{ e.acompanhamento_por_validar }}</span>{% else %}<span class="text-secondary">0</span>{% endif %}</td>
+          <td class="text-end"><a href="{% url 'candidaturas:acompanhar' e.pk %}" class="btn btn-outline-primary btn-sm">Acompanhar</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" class="text-center text-secondary py-5">
+          <i class="bi bi-person-workspace fs-2 d-block mb-2"></i>Ainda não lhe foi atribuído nenhum estagiário.
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="alert alert-warning">Esta conta ainda não tem perfil de orientador. Contacte a empresa.</div>
+{% endif %}
+{% endblock %}

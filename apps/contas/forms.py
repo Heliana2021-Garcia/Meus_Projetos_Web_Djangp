@@ -4,7 +4,8 @@ from django.db import transaction
 
 from apps.core.forms import EstiloCamposMixin
 from apps.empresas.models import Empresa
-from apps.estudantes.models import Curso, PerfilEstudante
+from apps.estudantes.models import Curso, DocumentoEstudante, PerfilEstudante
+from apps.estudantes.validadores import validar_documento
 
 from .models import Utilizador
 
@@ -12,13 +13,11 @@ from .models import Utilizador
 NIF_DIGITOS = 10
 
 
-class EntrarForm(AuthenticationForm):
+class EntrarForm(EstiloCamposMixin, AuthenticationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["username"].label = "Nome de utilizador"
         self.fields["password"].label = "Palavra-passe"
-        for campo in self.fields.values():
-            campo.widget.attrs["class"] = "campo"
 
 
 class RegistoEstudanteForm(EstiloCamposMixin, UserCreationForm):
@@ -39,10 +38,19 @@ class RegistoEstudanteForm(EstiloCamposMixin, UserCreationForm):
         decimal_places=2,
         localize=True,
     )
+    declaracao_notas = forms.FileField(
+        label="Declaração com notas",
+        help_text="PDF, PNG ou JPG, até 5 MB.",
+    )
+    bilhete_identidade = forms.FileField(
+        label="Bilhete de identidade",
+        help_text="PDF, PNG ou JPG, até 5 MB.",
+    )
 
     field_order = [
         "first_name", "last_name", "numero_estudante", "curso", "ano_frequencia",
-        "media_geral", "username", "email", "password1", "password2",
+        "media_geral", "declaracao_notas", "bilhete_identidade",
+        "username", "email", "password1", "password2",
     ]
 
     class Meta(UserCreationForm.Meta):
@@ -62,18 +70,27 @@ class RegistoEstudanteForm(EstiloCamposMixin, UserCreationForm):
             raise forms.ValidationError("Já existe um estudante com este número.")
         return numero
 
+    def clean_declaracao_notas(self):
+        return validar_documento(self.cleaned_data["declaracao_notas"])
+
+    def clean_bilhete_identidade(self):
+        return validar_documento(self.cleaned_data["bilhete_identidade"])
+
     @transaction.atomic
     def save(self, commit=True):
         utilizador = super().save(commit=False)
         utilizador.tipo = Utilizador.Tipo.ESTUDANTE
         utilizador.save()
-        PerfilEstudante.objects.create(
+        perfil = PerfilEstudante.objects.create(
             utilizador=utilizador,
             numero_estudante=self.cleaned_data["numero_estudante"],
             curso=self.cleaned_data["curso"],
             ano_frequencia=self.cleaned_data["ano_frequencia"],
             media_geral=self.cleaned_data["media_geral"],
+            registo_estado=PerfilEstudante.Registo.PENDENTE,
         )
+        perfil.guardar_documento(DocumentoEstudante.Tipo.DECLARACAO, self.cleaned_data["declaracao_notas"])
+        perfil.guardar_documento(DocumentoEstudante.Tipo.BI, self.cleaned_data["bilhete_identidade"])
         return utilizador
 
 
@@ -82,7 +99,7 @@ class RegistoEmpresaForm(EstiloCamposMixin, UserCreationForm):
     nif = forms.CharField(
         label="NIF",
         max_length=20,
-        help_text=f"{NIF_DIGITOS} dígitos. A administração valida o NIF antes de as vagas ficarem públicas.",
+        help_text=f"{NIF_DIGITOS} dígitos. A coordenação valida o NIF antes de as vagas ficarem públicas.",
     )
     sector = forms.CharField(label="Sector de actividade", max_length=100, required=False)
     telefone = forms.CharField(label="Telefone", max_length=30, required=False)

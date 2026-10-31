@@ -1,6 +1,11 @@
-﻿from decimal import Decimal
+from decimal import Decimal
+
+import os
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.core.files.storage import FileSystemStorage
+from django.utils import timezone
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
@@ -49,6 +54,20 @@ class PerfilEstudante(ModeloBase):
         decimal_places=2,
         validators=[MinValueValidator(0), MaxValueValidator(20)],
     )
+    class Registo(models.TextChoices):
+        PENDENTE = "PENDENTE", "Pendente de validação"
+        APROVADO = "APROVADO", "Aprovado"
+        DEVOLVIDO = "DEVOLVIDO", "Devolvido para correcção"
+
+    registo_estado = models.CharField(
+        "estado do registo", max_length=12, choices=Registo.choices, default=Registo.APROVADO
+    )
+    registo_motivo = models.TextField("motivo da devolução", blank=True)
+    registo_decidido_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+        related_name="+", verbose_name="decidido por",
+    )
+    registo_decidido_em = models.DateTimeField("decidido em", null=True, blank=True)
     resumo = models.TextField("resumo profissional", blank=True)
     curriculo = models.FileField("currículo (PDF)", upload_to="curriculos/", blank=True)
     tecnologias = models.ManyToManyField(
@@ -69,6 +88,8 @@ class PerfilEstudante(ModeloBase):
     @property
     def motivos_inelegibilidade(self):
         motivos = []
+        if self.registo_estado != self.Registo.APROVADO:
+            motivos.append("O seu registo ainda não foi validado pela coordenação.")
         if self.ano_frequencia < self.ANO_MINIMO_CANDIDATURA:
             motivos.append(
                 f"É necessário frequentar o {self.ANO_MINIMO_CANDIDATURA}º ano ou superior."
@@ -90,3 +111,86 @@ class PerfilEstudante(ModeloBase):
     def marcar_disponivel(self):
         self.estado = self.Estado.DISPONIVEL
         self.save(update_fields=["estado", "atualizado_em"])
+
+    TIPOS_OBRIGATORIOS = ("DECLARACAO", "BI")
+
+    @property
+    def tem_documentos_obrigatorios(self):
+        existentes = set(self.documentos.values_list("tipo", flat=True))
+        return set(self.TIPOS_OBRIGATORIOS) <= existentes
+
+    def guardar_documento(self, tipo, ficheiro):
+        """Cria o documento ou substitui o anterior, apagando o ficheiro antigo."""
+        documento = self.documentos.filter(tipo=tipo).first()
+        if documento is None:
+            return DocumentoEstudante.objects.create(estudante=self, tipo=tipo, ficheiro=ficheiro)
+        documento.ficheiro.delete(save=False)
+        documento.ficheiro = ficheiro
+        documento.save()
+        return documento
+
+    def aprovar_registo(self, utilizador):
+        if not self.tem_documentos_obrigatorios:
+            raise ValidationError(
+                "Faltam documentos obrigatórios (declaração com notas e bilhete de identidade)."
+            )
+        self.registo_estado = self.Registo.APROVADO
+        self.registo_motivo = ""
+        self.registo_decidido_por = utilizador
+        self.registo_decidido_em = timezone.now()
+        self.save(update_fields=[
+            "registo_estado", "registo_motivo", "registo_decidido_por",
+            "registo_decidido_em", "atualizado_em",
+        ])
+
+    def devolver_registo(self, utilizador, motivo):
+        motivo = (motivo or "").strip()
+        if not motivo:
+            raise ValidationError("Indique o motivo da devolução.")
+        self.registo_estado = self.Registo.DEVOLVIDO
+        self.registo_motivo = motivo
+        self.registo_decidido_por = utilizador
+        self.registo_decidido_em = timezone.now()
+        self.save(update_fields=[
+            "registo_estado", "registo_motivo", "registo_decidido_por",
+            "registo_decidido_em", "atualizado_em",
+        ])
+
+    def resubmeter_registo(self):
+        self.registo_estado = self.Registo.PENDENTE
+        self.save(update_fields=["registo_estado", "atualizado_em"])
+
+
+def armazenamento_privado():
+    """Pasta fora de `media/`, nunca servida directamente: só através da vista com permissões."""
+    return FileSystemStorage(location=settings.BASE_DIR / "privado")
+
+
+def caminho_documento(instancia, nome):
+    extensao = os.path.splitext(nome)[1].lower()
+    return f"estudantes/{instancia.estudante_id}/{instancia.tipo.lower()}{extensao}"
+
+
+class DocumentoEstudante(ModeloBase):
+    class Tipo(models.TextChoices):
+        DECLARACAO = "DECLARACAO", "Declaração com notas"
+        BI = "BI", "Bilhete de identidade"
+
+    estudante = models.ForeignKey(
+        PerfilEstudante, on_delete=models.CASCADE, related_name="documentos",
+        verbose_name="estudante",
+    )
+    tipo = models.CharField("tipo", max_length=12, choices=Tipo.choices)
+    ficheiro = models.FileField(
+        "ficheiro", upload_to=caminho_documento, storage=armazenamento_privado
+    )
+
+    class Meta:
+        verbose_name = "documento do estudante"
+        verbose_name_plural = "documentos dos estudantes"
+        constraints = [
+            models.UniqueConstraint(fields=["estudante", "tipo"], name="documento_unico_por_tipo"),
+        ]
+
+    def __str__(self):
+        return f"{self.get_tipo_display()} · {self.estudante}"

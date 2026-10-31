@@ -1,0 +1,48 @@
+{% extends "layouts/base.html" %}
+{% block titulo %}Diário de actividades{% endblock %}
+{% block conteudo %}
+{% include "components/cabecalho_pagina.html" with titulo="Diário de actividades" descricao="Registe o que fez durante o estágio. O orientador valida cada registo." %}
+<div class="sigest-medio">
+  {% if not estagio %}
+  <div class="card"><div class="card-body text-center py-5 text-secondary">
+    <i class="bi bi-journal-text fs-1"></i>
+    <p class="mt-2 mb-0">O diário fica disponível quando tiver um estágio.</p>
+  </div></div>
+  {% else %}
+  <p class="text-secondary">{{ estagio.vaga.titulo }} · {{ estagio.vaga.empresa.nome }} · {% include "components/estado_estagio.html" with c=estagio %}</p>
+
+  {% if em_curso %}
+  <div class="card mb-4"><div class="card-body p-4">
+    <h2 class="h6 mb-3">Novo registo</h2>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% for campo in form %}{% include "components/campo.html" %}{% endfor %}
+      <button type="submit" class="btn btn-primary">Guardar registo</button>
+    </form>
+  </div></div>
+  {% else %}
+  <div class="alert alert-info">O diário só pode ser preenchido com o estágio em curso (início confirmado pela empresa e por si).</div>
+  {% endif %}
+
+  {% for r in registos %}
+  <article class="card mb-3"><div class="card-body">
+    <div class="d-flex justify-content-between align-items-start gap-2">
+      <h3 class="h6 mb-2">{{ r.data|date:"d/m/Y" }}</h3>
+      {% include "components/estado_validacao.html" with item=r %}
+    </div>
+    <p class="mb-2" style="white-space: pre-line;">{{ r.descricao }}</p>
+    {% if r.competencias %}<p class="small mb-1"><strong>Conhecimentos e competências:</strong> {{ r.competencias }}</p>{% endif %}
+    {% if r.observacoes %}<p class="small mb-1"><strong>Observações:</strong> {{ r.observacoes }}</p>{% endif %}
+    {% if r.comentario_orientador %}
+    <div class="alert alert-light border small mt-2 mb-0"><strong>Orientador:</strong> {{ r.comentario_orientador }}</div>
+    {% endif %}
+    {% if em_curso and r.estado != 'VALIDADO' %}
+    <a href="{% url 'candidaturas:registo_editar' r.pk %}" class="btn btn-outline-primary btn-sm mt-2">Editar</a>
+    {% endif %}
+  </div></article>
+  {% empty %}
+  {% if em_curso %}<p class="text-secondary">Ainda não tem registos. Preencha o primeiro acima.</p>{% endif %}
+  {% endfor %}
+  {% endif %}
+</div>
+{% endblock %}

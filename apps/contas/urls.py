@@ -7,7 +7,8 @@ from .forms import EntrarForm
 app_name = "contas"
 
 urlpatterns = [
-    path("", views.inicio, name="inicio"),
+    path("", views.PaginaPublicaView.as_view(), name="publica"),
+    path("painel/", views.inicio, name="inicio"),
     path(
         "entrar/",
         auth_views.LoginView.as_view(

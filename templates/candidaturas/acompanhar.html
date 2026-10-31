@@ -1,0 +1,50 @@
+{% extends "layouts/base.html" %}
+{% block titulo %}Acompanhamento{% endblock %}
+{% block conteudo %}
+{% include "components/cabecalho_pagina.html" with titulo="Acompanhamento do estágio" descricao="Diário de actividades e relatórios do estagiário." %}
+<div class="sigest-medio">
+  <p class="text-end"><a href="{% url 'candidaturas:avaliacao' c.pk %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-award me-1"></i>Avaliação e nota final</a></p>
+  <div class="card mb-4"><div class="card-body">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+      <div>
+        <h2 class="h5 mb-1">{{ c.estudante.utilizador.get_full_name|default:c.estudante.utilizador.username }}</h2>
+        <p class="small text-secondary mb-0">{{ c.estudante.numero_estudante }} · {{ c.estudante.curso.sigla }} · {{ c.vaga.titulo }} · {{ c.vaga.empresa.nome }}</p>
+      </div>
+      {% include "components/estado_estagio.html" with c=c %}
+    </div>
+    <p class="small mt-2 mb-0">Orientador: {{ c.orientador.utilizador.get_full_name|default:"—" }}{% if c.data_inicio %} · Período: {{ c.data_inicio|date:"d/m/Y" }} a {{ c.data_fim|date:"d/m/Y" }}{% endif %}</p>
+  </div></div>
+
+  <h2 class="h6">Relatórios</h2>
+  {% for r in relatorios %}
+  <article class="card mb-3"><div class="card-body">
+    <div class="d-flex justify-content-between align-items-start gap-2">
+      <h3 class="h6 mb-1">{{ r.get_tipo_display }} — {{ r.titulo }}</h3>
+      {% include "components/estado_validacao.html" with item=r %}
+    </div>
+    <p class="mb-2" style="white-space: pre-line;">{{ r.conteudo }}</p>
+    {% if r.comentario_orientador %}<div class="alert alert-light border small mb-0"><strong>Orientador:</strong> {{ r.comentario_orientador }}</div>{% endif %}
+    {% include "components/decisao.html" with tipo="relatorio" item=r %}
+  </div></article>
+  {% empty %}
+  <p class="text-secondary">Ainda não há relatórios submetidos.</p>
+  {% endfor %}
+
+  <h2 class="h6 mt-4">Diário de actividades</h2>
+  {% for r in registos %}
+  <article class="card mb-3"><div class="card-body">
+    <div class="d-flex justify-content-between align-items-start gap-2">
+      <h3 class="h6 mb-2">{{ r.data|date:"d/m/Y" }}</h3>
+      {% include "components/estado_validacao.html" with item=r %}
+    </div>
+    <p class="mb-2" style="white-space: pre-line;">{{ r.descricao }}</p>
+    {% if r.competencias %}<p class="small mb-1"><strong>Conhecimentos e competências:</strong> {{ r.competencias }}</p>{% endif %}
+    {% if r.observacoes %}<p class="small mb-1"><strong>Observações:</strong> {{ r.observacoes }}</p>{% endif %}
+    {% if r.comentario_orientador %}<div class="alert alert-light border small mt-2 mb-0"><strong>Orientador:</strong> {{ r.comentario_orientador }}</div>{% endif %}
+    {% include "components/decisao.html" with tipo="registo" item=r %}
+  </div></article>
+  {% empty %}
+  <p class="text-secondary">Ainda não há registos no diário.</p>
+  {% endfor %}
+</div>
+{% endblock %}

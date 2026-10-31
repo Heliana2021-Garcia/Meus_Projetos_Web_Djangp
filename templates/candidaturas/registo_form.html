@@ -1,0 +1,16 @@
+{% extends "layouts/base.html" %}
+{% block titulo %}Editar registo{% endblock %}
+{% block conteudo %}
+{% include "components/cabecalho_pagina.html" with titulo="Editar registo" descricao="Depois de guardar, o registo volta a ficar por validar." %}
+<div class="sigest-estreito"><div class="card"><div class="card-body p-4">
+  {% if object.comentario_orientador %}
+  <div class="alert alert-warning small"><strong>Orientador:</strong> {{ object.comentario_orientador }}</div>
+  {% endif %}
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% for campo in form %}{% include "components/campo.html" %}{% endfor %}
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a href="{% url 'candidaturas:diario' %}" class="btn btn-outline-secondary">Cancelar</a>
+  </form>
+</div></div></div>
+{% endblock %}

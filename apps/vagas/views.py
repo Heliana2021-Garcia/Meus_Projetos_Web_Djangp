@@ -62,12 +62,20 @@ class PublicarVagaView(EmpresaRequeridaMixin, View):
     def post(self, request, pk):
         vaga = get_object_or_404(Vaga, pk=pk, empresa=self.empresa)
         try:
-            vaga.publicar()
+            if vaga.estado not in (Vaga.Estado.RASCUNHO, Vaga.Estado.ENCERRADA):
+                raise ValidationError("Esta vaga já está publicada ou em análise.")
+            if vaga.estado == Vaga.Estado.ENCERRADA:
+                vaga.publicar()
+            else:
+                vaga.submeter()
         except ValidationError as erro:
             for mensagem in erro.messages:
                 messages.error(request, mensagem)
         else:
-            messages.success(request, f"A vaga \"{vaga.titulo}\" está publicada.")
+            if vaga.estado == Vaga.Estado.EM_ANALISE:
+                messages.success(request, f"A vaga \"{vaga.titulo}\" foi enviada para aprovação do INSTIC.")
+            else:
+                messages.success(request, f"A vaga \"{vaga.titulo}\" foi reaberta.")
         return redirect("vagas:minhas")
 
 
@@ -100,6 +108,12 @@ class FeedVagasView(EstudanteRequeridoMixin, ListView):
                 | Q(empresa__nome__icontains=q)
                 | Q(tecnologias__nome__icontains=q)
             ).distinct()
+        tipo = self.request.GET.get("tipo", "").strip()
+        if tipo in Vaga.Tipo.values:
+            consulta = consulta.filter(tipo_estagio=tipo)
+        area = self.request.GET.get("area", "").strip()
+        if area:
+            consulta = consulta.filter(area__icontains=area)
         return consulta
 
     def get_context_data(self, **kwargs):
@@ -129,6 +143,9 @@ class FeedVagasView(EstudanteRequeridoMixin, ListView):
         contexto["itens"] = itens
         contexto["perfil"] = perfil
         contexto["q"] = self.request.GET.get("q", "").strip()
+        contexto["tipo"] = self.request.GET.get("tipo", "").strip()
+        contexto["area"] = self.request.GET.get("area", "").strip()
+        contexto["tipos"] = Vaga.Tipo.choices
         return contexto
 
 

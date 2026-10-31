@@ -1,0 +1,82 @@
+{% extends "layouts/base.html" %}
+{% block titulo %}Relatório de estágios{% endblock %}
+{% block conteudo %}
+{% include "components/cabecalho_pagina.html" with titulo="Relatório de estágios" descricao="Filtre os estágios e exporte a lista em CSV ou PDF." %}
+
+<form method="get" class="card card-body mb-4">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-3">
+      <label class="form-label small mb-1" for="f-curso">Curso</label>
+      <select id="f-curso" name="curso" class="form-select form-select-sm">
+        <option value="">Todos</option>
+        {% for cu in cursos %}<option value="{{ cu.pk }}" {% if filtros.curso == cu.pk|stringformat:"s" %}selected{% endif %}>{{ cu.sigla }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label small mb-1" for="f-empresa">Empresa</label>
+      <input id="f-empresa" type="text" name="empresa" value="{{ filtros.empresa }}" class="form-control form-control-sm" placeholder="Nome da empresa">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label small mb-1" for="f-tipo">Modalidade</label>
+      <select id="f-tipo" name="tipo" class="form-select form-select-sm">
+        <option value="">Todas</option>
+        {% for valor, rotulo in tipos %}<option value="{{ valor }}" {% if filtros.tipo == valor %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label small mb-1" for="f-estado">Estado do estágio</label>
+      <select id="f-estado" name="estado" class="form-select form-select-sm">
+        <option value="">Todos</option>
+        {% for valor, rotulo in estados %}<option value="{{ valor }}" {% if filtros.estado == valor %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label small mb-1" for="f-de">Início de</label>
+      <input id="f-de" type="date" name="de" value="{{ filtros.de }}" class="form-control form-control-sm">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label small mb-1" for="f-ate">Início até</label>
+      <input id="f-ate" type="date" name="ate" value="{{ filtros.ate }}" class="form-control form-control-sm">
+    </div>
+    <div class="col-md-6 d-flex gap-2">
+      <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
+      <a href="{% url 'relatorios:relatorio_estagios' %}" class="btn btn-outline-secondary btn-sm">Limpar</a>
+      <a href="{% url 'relatorios:relatorio_estagios_csv' %}?{{ query }}" class="btn btn-outline-primary btn-sm ms-auto"><i class="bi bi-filetype-csv me-1"></i>CSV</a>
+      <a href="{% url 'relatorios:relatorio_estagios_pdf' %}?{{ query }}" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</a>
+    </div>
+  </div>
+</form>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md"><div class="card card-body py-2"><div class="small text-secondary">Total</div><div class="fs-4">{{ total }}</div></div></div>
+  <div class="col-6 col-md"><div class="card card-body py-2"><div class="small text-secondary">Por iniciar</div><div class="fs-4">{{ contagem.POR_INICIAR }}</div></div></div>
+  <div class="col-6 col-md"><div class="card card-body py-2"><div class="small text-secondary">Em curso</div><div class="fs-4">{{ contagem.EM_CURSO }}</div></div></div>
+  <div class="col-6 col-md"><div class="card card-body py-2"><div class="small text-secondary">Interrompidos</div><div class="fs-4">{{ contagem.INTERROMPIDO }}</div></div></div>
+  <div class="col-6 col-md"><div class="card card-body py-2"><div class="small text-secondary">Concluídos</div><div class="fs-4">{{ contagem.CONCLUIDO }}</div></div></div>
+  <div class="col-6 col-md"><div class="card card-body py-2"><div class="small text-secondary">Efectivados</div><div class="fs-4">{{ efectivados }}</div></div></div>
+  <div class="col-6 col-md"><div class="card card-body py-2"><div class="small text-secondary">Média das notas</div><div class="fs-4">{{ media|default:"—" }}</div></div></div>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead><tr><th>Estudante</th><th>Empresa / vaga</th><th>Modalidade</th><th>Orientador</th><th>Estado</th><th>Início</th><th>Nota</th></tr></thead>
+      <tbody>
+        {% for c in linhas %}
+        <tr>
+          <td>{{ c.estudante.utilizador.get_full_name|default:c.estudante.utilizador.username }}<br><small class="text-secondary">{{ c.estudante.numero_estudante }} · {{ c.estudante.curso.sigla }}</small></td>
+          <td>{{ c.vaga.empresa.nome }}<br><small class="text-secondary">{{ c.vaga.titulo }}</small></td>
+          <td>{{ c.vaga.get_tipo_estagio_display }}</td>
+          <td>{{ c.orientador.utilizador.get_full_name|default:"—" }}</td>
+          <td>{% include "components/estado_estagio.html" with c=c %}<br><a href="{% url 'candidaturas:acompanhar' c.pk %}" class="small">Acompanhamento</a></td>
+          <td>{% if c.data_inicio %}{{ c.data_inicio|date:"d/m/Y" }}{% else %}—{% endif %}</td>
+          <td>{% if c.estagio_estado == 'CONCLUIDO' %}<strong>{{ c.avaliacao_final }}</strong>{% else %}—{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" class="text-center text-secondary py-5">Nenhum estágio corresponde aos filtros escolhidos.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

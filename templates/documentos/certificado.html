@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: A4; margin: 2cm; }
+  body { font-family: Helvetica, Arial, sans-serif; font-size: 12pt; color: #1f2933; }
+  .centro { text-align: center; }
+  .instituicao { font-size: 11pt; color: #0B2A5B; margin: 0; }
+  .titulo { font-size: 20pt; color: #0B2A5B; margin: 28px 0 4px 0; letter-spacing: 1px; }
+  .linha { border-top: 3px solid #C5A059; margin: 10px 0 28px 0; }
+  p.texto { text-align: justify; line-height: 1.7; margin: 0 0 14px 0; }
+  .ref { font-size: 9pt; color: #52606d; }
+  .assinaturas td { width: 50%; text-align: center; padding-top: 70px; font-size: 10pt; }
+  .traco { border-top: 1px solid #1f2933; margin: 0 24px 4px 24px; }
+  .rodape { font-size: 8pt; color: #52606d; margin-top: 40px; text-align: center; }
+</style>
+</head>
+<body>
+  <div class="centro">
+    {% if logo %}<img src="{{ logo }}" style="height: 70px;">{% endif %}
+    <p class="instituicao"><b>UNIVERSIDADE DE LUANDA</b></p>
+    <p class="instituicao">Instituto de Tecnologias de Informação e Comunicação (INSTIC)</p>
+    <h1 class="titulo">CERTIFICADO DE CONCLUSÃO DE ESTÁGIO</h1>
+  </div>
+  <div class="linha"></div>
+
+  <p class="texto">
+    Certifica-se que <b>{{ c.estudante.utilizador.get_full_name|default:c.estudante.utilizador.username }}</b>,
+    estudante n.º <b>{{ c.estudante.numero_estudante }}</b> do curso de <b>{{ c.estudante.curso.nome }}</b>
+    do INSTIC, realizou o estágio {{ c.vaga.get_tipo_estagio_display|lower }}
+    "{{ c.vaga.titulo }}"{% if c.vaga.area %}, na área de {{ c.vaga.area }},{% endif %}
+    na empresa <b>{{ c.vaga.empresa.nome }}</b>, com duração prevista de {{ c.vaga.duracao_meses }} meses.
+  </p>
+  <p class="texto">
+    O estágio foi iniciado em {{ c.data_inicio|date:"d/m/Y" }} e a sua conclusão foi validada pela
+    coordenação institucional em {{ c.concluida_em|date:"d/m/Y" }}, tendo o estudante obtido a
+    nota final de <b>{{ c.avaliacao_final }} valores</b> (escala de 0 a 20).
+    {% if c.orientador %}O acompanhamento na empresa esteve a cargo de {{ c.orientador.utilizador.get_full_name }}.{% endif %}
+  </p>
+  <p class="texto">Para os devidos efeitos, emite-se o presente certificado.</p>
+  <p class="texto">Luanda, {{ emitido_em|date:"d/m/Y" }}.</p>
+
+  <table class="assinaturas" width="100%">
+    <tr>
+      <td><div class="traco"></div>A Coordenação Institucional do INSTIC</td>
+      <td><div class="traco"></div>A Empresa de Acolhimento</td>
+    </tr>
+  </table>
+
+  <p class="rodape">
+    Referência: {{ referencia }} · Documento gerado pelo SIGEST - Sistema de Gestão de Estágios e
+    Inserção Profissional. Válido após assinatura e carimbo.
+  </p>
+</body>
+</html>

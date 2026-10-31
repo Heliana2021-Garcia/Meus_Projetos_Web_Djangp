@@ -1,0 +1,5 @@
+{% if c.estado == 'APROVADO' %}<span class="badge text-bg-success"><i class="bi bi-check-circle me-1"></i>{{ c.get_estado_display }}</span>
+{% elif c.estado == 'REJEITADO' %}<span class="badge text-bg-danger"><i class="bi bi-x-circle me-1"></i>{{ c.get_estado_display }}</span>
+{% elif c.estado == 'PENDENTE' %}<span class="badge text-bg-secondary"><i class="bi bi-hourglass-split me-1"></i>{{ c.get_estado_display }}</span>
+{% elif c.estado == 'CANCELADA' %}<span class="badge text-bg-dark"><i class="bi bi-slash-circle me-1"></i>{{ c.get_estado_display }}</span>
+{% else %}<span class="badge text-bg-warning"><i class="bi bi-arrow-repeat me-1"></i>{{ c.get_estado_display }}</span>{% endif %}

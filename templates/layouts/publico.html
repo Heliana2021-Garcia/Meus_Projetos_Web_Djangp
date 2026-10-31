@@ -1,0 +1,58 @@
+{% load static %}<!DOCTYPE html>
+<html lang="pt" data-bs-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}SIGEST{% endblock %} | INSTIC</title>
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/sigest.css' %}">
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+  <header class="sigest-topbar">
+    <div class="container d-flex align-items-center gap-3 py-2">
+      <a href="{% url 'contas:publica' %}" class="d-flex align-items-center gap-3 text-decoration-none">
+        <img src="{% static 'img/logo_instic.png' %}" alt="Universidade de Luanda — INSTIC" class="sigest-logo">
+        <span class="d-none d-md-block border-start ps-3">
+          <span class="d-block fw-bold lh-1 text-primary">SIGEST</span>
+          <small class="text-secondary">Gestão de Estágios e Inserção Profissional</small>
+        </span>
+      </a>
+      <nav class="ms-auto d-flex align-items-center gap-2">
+        <a class="btn btn-link d-none d-lg-inline text-decoration-none" href="{% url 'contas:publica' %}#como-funciona">Como funciona</a>
+        <a class="btn btn-link d-none d-lg-inline text-decoration-none" href="{% url 'contas:publica' %}#faq">Perguntas frequentes</a>
+        {% if user.is_authenticated %}
+        <a class="btn btn-primary" href="{% url 'contas:inicio' %}"><i class="bi bi-speedometer2 me-1"></i>Ir para o painel</a>
+        {% else %}
+        <a class="btn btn-primary" href="{% url 'contas:entrar' %}"><i class="bi bi-box-arrow-in-right me-1"></i>Entrar</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <main class="flex-grow-1">
+    {% if messages %}
+    <div class="container pt-3">
+      {% for m in messages %}
+      <div class="alert alert-{% if m.level_tag == 'error' %}danger{% else %}{{ m.level_tag }}{% endif %} alert-dismissible fade show" role="alert">
+        {{ m }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% block conteudo %}{% endblock %}
+  </main>
+
+  <footer class="sigest-footer-publico py-4">
+    <div class="container small d-flex flex-wrap justify-content-between gap-2">
+      <span>© {% now "Y" %} Universidade de Luanda · Instituto de Tecnologias de Informação e Comunicação (INSTIC)</span>
+      <span>SIGEST — Sistema de Gestão de Estágios e Inserção Profissional</span>
+    </div>
+  </footer>
+
+  <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

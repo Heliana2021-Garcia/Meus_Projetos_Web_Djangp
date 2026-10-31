@@ -10,12 +10,14 @@ class VagaForm(EstiloCamposMixin, forms.ModelForm):
     class Meta:
         model = Vaga
         fields = (
-            "titulo", "descricao", "requisitos", "cursos", "tecnologias",
-            "numero_vagas", "localizacao", "modalidade", "duracao_meses", "data_limite",
+            "titulo", "area", "tipo_estagio", "descricao", "requisitos", "documentos_exigidos",
+            "cursos", "tecnologias", "numero_vagas", "localizacao", "modalidade",
+            "duracao_meses", "data_limite", "fase_teste", "fase_curriculo", "fase_entrevista",
         )
         widgets = {
             "descricao": forms.Textarea(attrs={"rows": 5}),
             "requisitos": forms.Textarea(attrs={"rows": 4}),
+            "documentos_exigidos": forms.Textarea(attrs={"rows": 3}),
             "cursos": forms.CheckboxSelectMultiple,
             "tecnologias": forms.CheckboxSelectMultiple,
             "data_limite": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),

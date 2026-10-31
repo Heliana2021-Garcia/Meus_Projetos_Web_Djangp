@@ -5,25 +5,35 @@ from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views import View
-from django.views.generic import DetailView, ListView
+from django.views.generic import DetailView, ListView, TemplateView
 
 from apps.contas.mixins import TipoRequeridoMixin
 from apps.contas.models import Utilizador
-from apps.vagas.mixins import EmpresaRequeridaMixin
+from apps.empresas.models import Orientador
+from apps.vagas.mixins import EmpresaRequeridaMixin, EstudanteRequeridoMixin
 from apps.vagas.models import Vaga
 
 from .models import Candidatura
 
 E = Candidatura.Estado
 
-# (estado, rótulo da coluna, próximo estado, rótulo do botão de avanço)
-COLUNAS = [
-    (E.PENDENTE, "Pendente", E.ENTREVISTA, "Marcar entrevista"),
-    (E.ENTREVISTA, "Entrevista", E.PROPOSTA, "Enviar proposta"),
-    (E.PROPOSTA, "Proposta", E.APROVADO, "Aprovar"),
-    (E.APROVADO, "Aprovado", None, None),
-    (E.REJEITADO, "Rejeitado", None, None),
-]
+ROTULOS_COLUNA = {
+    "PENDENTE": "Pendente",
+    "TESTE": "Teste psicotécnico",
+    "CURRICULO": "Análise do currículo",
+    "ENTREVISTA": "Entrevista presencial",
+    "PROPOSTA": "Decisão final",
+    "APROVADO": "Aprovado",
+    "REJEITADO": "Rejeitado",
+}
+# Rótulo do botão, conforme o estado para onde o cartão vai
+ROTULOS_AVANCO = {
+    "TESTE": "Convocar para o teste",
+    "CURRICULO": "Passar à análise do currículo",
+    "ENTREVISTA": "Marcar entrevista",
+    "PROPOSTA": "Passar à decisão final",
+    "APROVADO": "Aprovar",
+}
 
 
 def _e_ajax(request):
@@ -60,8 +70,18 @@ class KanbanVagaView(EmpresaRequeridaMixin, DetailView):
             ).prefetch_related("estudante__tecnologias")
         )
 
+        ordem = Candidatura.ORDEM
+        processo = vaga.estados_do_processo()
+        presentes = {c.estado for c in candidaturas}
+        # Mostra as fases da vaga e, por segurança, qualquer fase onde ainda haja candidatos
+        estados = [e for e in ordem if e in processo or e in presentes]
+
         colunas = []
-        for estado, rotulo, avanco_estado, avanco_rotulo in COLUNAS:
+        for estado in estados + ["REJEITADO"]:
+            avanco = None
+            if estado in ordem and estado != "APROVADO":
+                indice = ordem.index(estado)
+                avanco = next((e for e in processo if ordem.index(e) > indice), None)
             itens = [
                 {
                     "candidatura": c,
@@ -73,9 +93,9 @@ class KanbanVagaView(EmpresaRequeridaMixin, DetailView):
             colunas.append(
                 {
                     "estado": estado,
-                    "rotulo": rotulo,
-                    "avanco_estado": avanco_estado,
-                    "avanco_rotulo": avanco_rotulo,
+                    "rotulo": ROTULOS_COLUNA[estado],
+                    "avanco_estado": avanco,
+                    "avanco_rotulo": ROTULOS_AVANCO.get(avanco, ""),
                     "itens": itens,
                 }
             )
@@ -125,33 +145,119 @@ class MoverCandidaturaView(EmpresaRequeridaMixin, View):
         return redirect("candidaturas:kanban", pk=candidatura.vaga_id)
 
 
-class ConcluirEstagioView(EmpresaRequeridaMixin, View):
+# ------------------------------------------------------------------ estágio
+class EstagiosEmpresaView(EmpresaRequeridaMixin, ListView):
+    template_name = "candidaturas/estagios_empresa.html"
+    context_object_name = "estagios"
+
+    def get_queryset(self):
+        return (
+            Candidatura.objects.filter(estado=E.APROVADO, vaga__empresa=self.empresa)
+            .select_related("vaga", "estudante__utilizador", "estudante__curso", "orientador__utilizador")
+            .order_by("-atualizado_em")
+        )
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        contexto["orientadores"] = Orientador.objects.filter(
+            empresa=self.empresa, utilizador__is_active=True
+        ).select_related("utilizador")
+        return contexto
+
+
+class AtribuirOrientadorView(EmpresaRequeridaMixin, View):
     http_method_names = ["post"]
 
     def post(self, request, pk):
         candidatura = get_object_or_404(
-            Candidatura.objects.select_related("vaga", "estudante__utilizador"),
-            pk=pk,
-            vaga__empresa=self.empresa,
+            Candidatura.objects.select_related("vaga__empresa", "estudante__utilizador"),
+            pk=pk, estado=E.APROVADO, vaga__empresa=self.empresa,
         )
-        valor = request.POST.get("avaliacao", "").strip().replace(",", ".")
-
         try:
-            nota = Decimal(valor)
-            if not nota.is_finite():
-                raise InvalidOperation
-            nota = nota.quantize(Decimal("0.01"))
-        except InvalidOperation:
-            messages.error(request, "Indique uma avaliação numérica entre 0 e 20.")
+            identificador = int(request.POST.get("orientador", ""))
+        except ValueError:
+            identificador = None
+        orientador = (
+            Orientador.objects.select_related("utilizador", "empresa")
+            .filter(pk=identificador, empresa=self.empresa)
+            .first()
+            if identificador
+            else None
+        )
+        if orientador is None:
+            messages.error(request, "Seleccione um orientador da sua empresa.")
         else:
             try:
-                candidatura.concluir_estagio(nota)
+                candidatura.atribuir_orientador(orientador)
             except ValidationError as erro:
                 for mensagem in erro.messages:
                     messages.error(request, mensagem)
             else:
-                messages.success(
-                    request,
-                    "Estágio concluído. O estudante voltou a ficar disponível.",
-                )
-        return redirect("candidaturas:kanban", pk=candidatura.vaga_id)
+                messages.success(request, "Orientador atribuído.")
+        return redirect("candidaturas:estagios")
+
+
+class ConfirmarInicioView(TipoRequeridoMixin, View):
+    tipos_permitidos = (Utilizador.Tipo.EMPRESA, Utilizador.Tipo.ESTUDANTE)
+    http_method_names = ["post"]
+
+    def post(self, request, pk):
+        base = Candidatura.objects.select_related(
+            "vaga__empresa__utilizador", "estudante__utilizador", "orientador__utilizador"
+        ).filter(estado=E.APROVADO)
+        if request.user.tipo == Utilizador.Tipo.EMPRESA:
+            candidatura = get_object_or_404(base, pk=pk, vaga__empresa__utilizador=request.user)
+            destino = "candidaturas:estagios"
+        else:
+            candidatura = get_object_or_404(base, pk=pk, estudante__utilizador=request.user)
+            destino = "candidaturas:estagio"
+        try:
+            candidatura.confirmar_inicio(request.user)
+        except ValidationError as erro:
+            for mensagem in erro.messages:
+                messages.error(request, mensagem)
+        else:
+            messages.success(request, "Confirmação registada.")
+        return redirect(destino)
+
+
+class InterromperEstagioView(TipoRequeridoMixin, View):
+    tipos_permitidos = (
+        Utilizador.Tipo.EMPRESA, Utilizador.Tipo.COORDENADOR, Utilizador.Tipo.ADMINISTRADOR,
+    )
+    http_method_names = ["post"]
+
+    def post(self, request, pk):
+        base = Candidatura.objects.select_related(
+            "vaga__empresa__utilizador", "estudante__utilizador", "orientador__utilizador"
+        ).filter(estado=E.APROVADO)
+        if request.user.tipo == Utilizador.Tipo.EMPRESA:
+            candidatura = get_object_or_404(base, pk=pk, vaga__empresa__utilizador=request.user)
+            destino = "candidaturas:estagios"
+        else:
+            candidatura = get_object_or_404(base, pk=pk)
+            destino = "relatorios:estagios"
+        try:
+            candidatura.interromper(request.user, request.POST.get("motivo", ""))
+        except ValidationError as erro:
+            for mensagem in erro.messages:
+                messages.error(request, mensagem)
+        else:
+            messages.success(request, "Estágio interrompido. O estudante voltou a ficar disponível.")
+        return redirect(destino)
+
+
+class EstagioEstudanteView(EstudanteRequeridoMixin, TemplateView):
+    template_name = "candidaturas/estagio.html"
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        lista = list(
+            Candidatura.objects.filter(estudante=self.perfil, estado=E.APROVADO)
+            .select_related("vaga__empresa", "orientador__utilizador")
+            .order_by("-atualizado_em")
+        )
+        atual = next((c for c in lista if c.estagio_aberto), None)
+        contexto["estagio"] = atual
+        contexto["historico"] = [c for c in lista if c is not atual]
+        return contexto

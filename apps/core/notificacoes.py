@@ -22,3 +22,13 @@ def notificar(destinatario, titulo, mensagem="", url=""):
             fail_silently=True,
         )
     return notificacao
+
+def notificar_gestao(titulo, mensagem="", url=""):
+    """Avisa todos os coordenadores e administradores activos."""
+    from django.contrib.auth import get_user_model
+
+    Utilizador = get_user_model()
+    for destinatario in Utilizador.objects.filter(
+        tipo__in=[Utilizador.Tipo.ADMINISTRADOR, Utilizador.Tipo.COORDENADOR], is_active=True
+    ):
+        notificar(destinatario, titulo, mensagem, url)

@@ -1,0 +1,50 @@
+{% extends "layouts/base.html" %}
+{% block titulo %}Registos de estudantes{% endblock %}
+{% block conteudo %}
+{% include "components/cabecalho_pagina.html" with titulo="Registos de estudantes" descricao="Confirme os dados e os documentos. A decisão fica registada com o seu nome e a data." %}
+<div class="sigest-medio">
+  {% for p in perfis %}
+  <article class="card mb-3"><div class="card-body">
+    <div class="d-flex justify-content-between align-items-start gap-2">
+      <div>
+        <h2 class="h5 mb-1">{{ p.utilizador.get_full_name|default:p.utilizador.username }}</h2>
+        <p class="small text-secondary mb-0">{{ p.numero_estudante }} · {{ p.curso }} · {{ p.ano_frequencia }}º ano · média {{ p.media_geral }}</p>
+      </div>
+      <span class="badge text-bg-warning"><i class="bi bi-hourglass-split me-1"></i>{{ p.get_registo_estado_display }}</span>
+    </div>
+
+    {% if p.motivos_inelegibilidade|length > 1 %}
+    <p class="small text-warning-emphasis mt-3 mb-0"><i class="bi bi-info-circle me-1"></i>Pelos dados, ainda não cumpre os critérios de candidatura (ano mínimo ou média).</p>
+    {% endif %}
+
+    <h3 class="h6 mt-3">Documentos</h3>
+    <ul class="list-unstyled small mb-3">
+      {% for d in p.documentos.all %}
+      <li><a href="{% url 'estudantes:documento' d.pk %}" target="_blank" rel="noopener"><i class="bi bi-file-earmark-text me-1"></i>{{ d.get_tipo_display }}</a></li>
+      {% empty %}
+      <li class="text-danger">Sem documentos enviados.</li>
+      {% endfor %}
+    </ul>
+
+    <div class="d-flex flex-wrap align-items-start gap-2">
+      <form method="post" action="{% url 'relatorios:aprovar_estudante' p.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Aprovar registo</button>
+      </form>
+      <details>
+        <summary class="btn btn-outline-danger">Devolver para correcção</summary>
+        <form method="post" action="{% url 'relatorios:devolver_estudante' p.pk %}" class="mt-2" style="width: 20rem; max-width: 100%;">
+          {% csrf_token %}
+          <textarea name="motivo" rows="3" required class="form-control mb-2" placeholder="Motivo (obrigatório)"></textarea>
+          <button type="submit" class="btn btn-danger w-100">Confirmar devolução</button>
+        </form>
+      </details>
+    </div>
+  </div></article>
+  {% empty %}
+  <div class="card"><div class="card-body text-center py-5 text-secondary">
+    <i class="bi bi-person-check fs-1"></i><p class="mt-2 mb-0">Não há registos à espera de validação.</p>
+  </div></div>
+  {% endfor %}
+</div>
+{% endblock %}

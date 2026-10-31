@@ -82,7 +82,7 @@ class ControloDeAcessoTests(TestCase):
 
     def test_carta_so_pode_ser_aberta_pelos_envolvidos(self):
         candidatura = Candidatura.objects.create(estudante=self.aluno, vaga=self.vaga)
-        for estado in ("ENTREVISTA", "PROPOSTA", "APROVADO"):
+        for estado in ("TESTE", "ENTREVISTA", "PROPOSTA", "APROVADO"):
             candidatura.mover_para(estado)
         carta, _ = CartaEncaminhamento.emitir(candidatura, self.admin)
         url = reverse("documentos:descarregar", args=[carta.pk])
@@ -96,3 +96,128 @@ class ControloDeAcessoTests(TestCase):
             resposta = self.client.get(url)
             self.assertEqual(resposta.status_code, 200)
             self.assertEqual(resposta["Content-Type"], "application/pdf")
+
+    def test_paginas_renderizam_com_o_novo_layout(self):
+        self.assertEqual(self.client.get(reverse("contas:publica")).status_code, 200)
+        self.assertEqual(self.client.get(reverse("contas:entrar")).status_code, 200)
+        self.assertEqual(self.client.get(reverse("contas:registo_estudante")).status_code, 200)
+
+        paineis = (
+            (self.admin, "relatorios:painel"),
+            (self.u_aluno, "estudantes:painel"),
+            (self.u_emp, "empresas:painel"),
+        )
+        for utilizador, painel in paineis:
+            self.client.force_login(utilizador)
+            resposta = self.client.get(reverse(painel))
+            self.assertContains(resposta, "SIGEST")
+            self.assertContains(resposta, "vendor/bootstrap/css/bootstrap.min.css")
+
+from django.core.files.uploadedfile import SimpleUploadedFile  # noqa: E402
+
+from apps.core.models import Notificacao  # noqa: E402
+
+
+class RegistoEValidacaoDeEstudantesTests(TestCase):
+    def setUp(self):
+        self.curso = Curso.objects.create(nome="Engenharia Informatica", sigla="EI")
+        self.coord = User.objects.create_user("coord", "coord@t.ao", "x", tipo="COORDENADOR")
+
+    def _registar(self, ficheiro_bi=None, username="novo"):
+        return self.client.post(
+            reverse("contas:registo_estudante"),
+            {
+                "first_name": "Ana", "last_name": "Silva", "numero_estudante": "N1",
+                "curso": self.curso.pk, "ano_frequencia": 3, "media_geral": "15",
+                "username": username, "email": f"{username}@t.ao",
+                "password1": "Palavra-passe-segura-9", "password2": "Palavra-passe-segura-9",
+                "declaracao_notas": SimpleUploadedFile("notas.pdf", b"%PDF-1.4 teste"),
+                "bilhete_identidade": ficheiro_bi
+                or SimpleUploadedFile("bi.pdf", b"%PDF-1.4 teste"),
+            },
+        )
+
+    def _limpar_ficheiros(self, perfil):
+        for documento in perfil.documentos.all():
+            self.addCleanup(documento.ficheiro.delete, save=False)
+
+    def test_registo_fica_pendente_com_documentos_e_sem_elegibilidade(self):
+        resposta = self._registar()
+        self.assertEqual(resposta.status_code, 302)
+        perfil = PerfilEstudante.objects.get(numero_estudante="N1")
+        self._limpar_ficheiros(perfil)
+        self.assertEqual(perfil.registo_estado, PerfilEstudante.Registo.PENDENTE)
+        self.assertEqual(perfil.documentos.count(), 2)
+        self.assertFalse(perfil.elegivel)
+        self.assertTrue(Notificacao.objects.filter(destinatario=self.coord).exists())
+
+    def test_ficheiro_com_conteudo_falso_e_recusado(self):
+        falso = SimpleUploadedFile("bi.pdf", b"MZ isto nao e um pdf")
+        resposta = self._registar(ficheiro_bi=falso)
+        self.assertEqual(resposta.status_code, 200)
+        self.assertFalse(User.objects.filter(username="novo").exists())
+
+    def test_coordenador_aprova_e_estudante_fica_elegivel(self):
+        self._registar()
+        perfil = PerfilEstudante.objects.get(numero_estudante="N1")
+        self._limpar_ficheiros(perfil)
+        self.client.force_login(self.coord)
+        self.client.post(reverse("relatorios:aprovar_estudante", args=[perfil.pk]))
+        perfil.refresh_from_db()
+        self.assertEqual(perfil.registo_estado, PerfilEstudante.Registo.APROVADO)
+        self.assertEqual(perfil.registo_decidido_por, self.coord)
+        self.assertIsNotNone(perfil.registo_decidido_em)
+        self.assertTrue(perfil.elegivel)
+
+    def test_devolver_exige_motivo_e_estudante_pode_corrigir(self):
+        self._registar()
+        perfil = PerfilEstudante.objects.get(numero_estudante="N1")
+        self._limpar_ficheiros(perfil)
+        self.client.force_login(self.coord)
+        self.client.post(reverse("relatorios:devolver_estudante", args=[perfil.pk]), {"motivo": "  "})
+        perfil.refresh_from_db()
+        self.assertEqual(perfil.registo_estado, PerfilEstudante.Registo.PENDENTE)
+
+        self.client.post(reverse("relatorios:devolver_estudante", args=[perfil.pk]), {"motivo": "BI ilegível."})
+        perfil.refresh_from_db()
+        self.assertEqual(perfil.registo_estado, PerfilEstudante.Registo.DEVOLVIDO)
+
+        self.client.force_login(perfil.utilizador)
+        novo = SimpleUploadedFile("bi2.pdf", b"%PDF-1.4 novo")
+        self.client.post(reverse("estudantes:documentos"), {"bilhete_identidade": novo})
+        perfil.refresh_from_db()
+        self._limpar_ficheiros(perfil)
+        self.assertEqual(perfil.registo_estado, PerfilEstudante.Registo.PENDENTE)
+
+    def test_documento_so_abre_ao_dono_e_a_gestao(self):
+        self._registar()
+        perfil = PerfilEstudante.objects.get(numero_estudante="N1")
+        self._limpar_ficheiros(perfil)
+        documento = perfil.documentos.first()
+        url = reverse("estudantes:documento", args=[documento.pk])
+
+        outro = User.objects.create_user("outro", "outro@t.ao", "x", tipo="ESTUDANTE")
+        PerfilEstudante.objects.create(
+            utilizador=outro, numero_estudante="N2", curso=self.curso,
+            ano_frequencia=3, media_geral=Decimal("15"),
+        )
+        empresa = User.objects.create_user("emp9", "emp9@t.ao", "x", tipo="EMPRESA")
+
+        self.client.logout()
+        self.assertEqual(self.client.get(url).status_code, 302)
+        for utilizador, esperado in ((outro, 403), (empresa, 403), (perfil.utilizador, 200), (self.coord, 200)):
+            self.client.force_login(utilizador)
+            resposta = self.client.get(url)
+            self.assertEqual(resposta.status_code, esperado, utilizador.username)
+            if esperado == 200:
+                if getattr(resposta, "streaming", False):
+                    b"".join(resposta.streaming_content)
+
+    def test_estudante_nao_valida_registos(self):
+        self._registar()
+        perfil = PerfilEstudante.objects.get(numero_estudante="N1")
+        self._limpar_ficheiros(perfil)
+        resposta = self.client.post(reverse("relatorios:aprovar_estudante", args=[perfil.pk]))
+        self.assertEqual(resposta.status_code, 403)
+        perfil.refresh_from_db()
+        self.assertEqual(perfil.registo_estado, PerfilEstudante.Registo.PENDENTE)

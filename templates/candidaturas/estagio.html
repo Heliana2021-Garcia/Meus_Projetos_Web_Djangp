@@ -1,0 +1,68 @@
+{% extends "layouts/base.html" %}
+{% block titulo %}O meu estágio{% endblock %}
+{% block conteudo %}
+{% include "components/cabecalho_pagina.html" with titulo="O meu estágio" descricao="Empresa, orientador, datas e confirmação de início." %}
+<div class="sigest-estreito">
+  {% if estagio %}
+  <div class="card mb-3"><div class="card-body p-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+      <div>
+        <h2 class="h5 mb-1">{{ estagio.vaga.titulo }}</h2>
+        <p class="text-secondary mb-0">{{ estagio.vaga.empresa.nome }}</p>
+      </div>
+      {% include "components/estado_estagio.html" with c=estagio %}
+    </div>
+
+    <dl class="row small mb-3">
+      <dt class="col-sm-4 text-secondary fw-normal">Tipo de estágio</dt><dd class="col-sm-8">{{ estagio.vaga.get_tipo_estagio_display }} · {{ estagio.vaga.get_modalidade_display }}</dd>
+      <dt class="col-sm-4 text-secondary fw-normal">Duração prevista</dt><dd class="col-sm-8">{{ estagio.vaga.duracao_meses }} meses</dd>
+      <dt class="col-sm-4 text-secondary fw-normal">Início</dt>
+      <dd class="col-sm-8">{% if estagio.data_inicio %}{{ estagio.data_inicio|date:"d/m/Y" }}{% else %}Ainda não iniciou{% endif %}</dd>
+      <dt class="col-sm-4 text-secondary fw-normal">Conclusão prevista</dt>
+      <dd class="col-sm-8">{% if estagio.data_fim %}{{ estagio.data_fim|date:"d/m/Y" }}{% else %}—{% endif %}</dd>
+      <dt class="col-sm-4 text-secondary fw-normal">Orientador</dt>
+      <dd class="col-sm-8">
+        {% if estagio.orientador %}{{ estagio.orientador.utilizador.get_full_name }}{% if estagio.orientador.cargo %} · {{ estagio.orientador.cargo }}{% endif %} · {{ estagio.orientador.utilizador.email }}
+        {% else %}A empresa ainda não atribuiu o orientador.{% endif %}
+      </dd>
+      <dt class="col-sm-4 text-secondary fw-normal">Confirmação de início</dt>
+      <dd class="col-sm-8">
+        Empresa: {% if estagio.inicio_confirmado_empresa %}confirmado{% else %}pendente{% endif %}
+        · Você: {% if estagio.inicio_confirmado_estudante %}confirmado{% else %}pendente{% endif %}
+      </dd>
+    </dl>
+
+    {% if estagio.estagio_estado == 'POR_INICIAR' %}
+      {% if estagio.orientador_id and not estagio.inicio_confirmado_estudante %}
+      <form method="post" action="{% url 'candidaturas:confirmar_inicio' estagio.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Confirmar o início do estágio</button>
+      </form>
+      {% elif not estagio.orientador_id %}
+      <div class="alert alert-info mb-0">O início só pode ser confirmado depois de a empresa atribuir o orientador.</div>
+      {% else %}
+      <div class="alert alert-info mb-0">Já confirmou. Falta a confirmação da empresa.</div>
+      {% endif %}
+    {% endif %}
+  </div></div>
+  {% else %}
+  <div class="card"><div class="card-body text-center py-5">
+    <i class="bi bi-mortarboard fs-1 text-secondary"></i>
+    <p class="text-secondary mt-2 mb-3">Não tem nenhum estágio activo. Quando uma candidatura for aprovada, aparece aqui.</p>
+    <a href="{% url 'vagas:feed' %}" class="btn btn-primary">Ver oportunidades</a>
+  </div></div>
+  {% endif %}
+
+  {% if historico %}
+  <h2 class="h6 mt-4">Estágios anteriores</h2>
+  <ul class="list-group">
+    {% for h in historico %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      <span>{{ h.vaga.titulo }} · {{ h.vaga.empresa.nome }}</span>
+      {% include "components/estado_estagio.html" with c=h %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+{% endblock %}

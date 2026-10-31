@@ -1,0 +1,188 @@
+/* SIGEST - identidade visual (azul institucional, branco e dourado).
+   Cores provisórias: confirmar o azul com a coordenação do INSTIC. */
+:root,
+[data-bs-theme="light"] {
+  --sigest-azul: #0B2A5B;
+  --sigest-azul-escuro: #081E42;
+  --sigest-azul-claro: #1B4286;
+  --sigest-dourado: #C5A059;
+  --sigest-cinza-claro: #F4F6F9;
+  --sigest-borda: #DEE2E6;
+
+  --bs-primary: #0B2A5B;
+  --bs-primary-rgb: 11, 42, 91;
+  --bs-link-color: #0B2A5B;
+  --bs-link-color-rgb: 11, 42, 91;
+  --bs-link-hover-color: #1B4286;
+  --bs-link-hover-color-rgb: 27, 66, 134;
+  --bs-body-color: #2B3340;
+  --bs-border-color: #DEE2E6;
+}
+
+body { background-color: var(--sigest-cinza-claro); }
+
+/* Botões */
+.btn-primary {
+  --bs-btn-bg: var(--sigest-azul);
+  --bs-btn-border-color: var(--sigest-azul);
+  --bs-btn-hover-bg: var(--sigest-azul-claro);
+  --bs-btn-hover-border-color: var(--sigest-azul-claro);
+  --bs-btn-active-bg: var(--sigest-azul-escuro);
+  --bs-btn-active-border-color: var(--sigest-azul-escuro);
+  --bs-btn-disabled-bg: var(--sigest-azul);
+  --bs-btn-disabled-border-color: var(--sigest-azul);
+  --bs-btn-focus-shadow-rgb: 11, 42, 91;
+}
+.btn-outline-primary {
+  --bs-btn-color: var(--sigest-azul);
+  --bs-btn-border-color: var(--sigest-azul);
+  --bs-btn-hover-bg: var(--sigest-azul);
+  --bs-btn-hover-border-color: var(--sigest-azul);
+  --bs-btn-active-bg: var(--sigest-azul-escuro);
+  --bs-btn-active-border-color: var(--sigest-azul-escuro);
+  --bs-btn-focus-shadow-rgb: 11, 42, 91;
+}
+.btn-ouro {
+  --bs-btn-color: var(--sigest-azul-escuro);
+  --bs-btn-bg: var(--sigest-dourado);
+  --bs-btn-border-color: var(--sigest-dourado);
+  --bs-btn-hover-color: var(--sigest-azul-escuro);
+  --bs-btn-hover-bg: #D3B373;
+  --bs-btn-hover-border-color: #D3B373;
+  --bs-btn-active-bg: #B88F45;
+  --bs-btn-active-border-color: #B88F45;
+}
+
+/* Cabeçalho */
+.sigest-topbar { background: #fff; border-bottom: 3px solid var(--sigest-dourado); }
+.sigest-logo { height: 46px; width: auto; }
+.sigest-logo-grande { height: 84px; width: auto; max-width: 100%; }
+
+/* Navegação lateral (menu recolhível no telemóvel) */
+.sigest-sidebar {
+  --bs-offcanvas-bg: var(--sigest-azul);
+  --bs-offcanvas-color: #fff;
+  --bs-offcanvas-width: 260px;
+}
+.sigest-sidebar .offcanvas-body { padding: 1rem .75rem; }
+.sigest-sidebar .nav-link {
+  display: flex; align-items: center; gap: .65rem;
+  color: rgba(255, 255, 255, .85);
+  padding: .6rem .85rem; border-radius: .5rem;
+}
+.sigest-sidebar .nav-link:hover { background: rgba(255, 255, 255, .08); color: #fff; }
+.sigest-sidebar .nav-link.active {
+  background: rgba(255, 255, 255, .14); color: #fff; font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--sigest-dourado);
+}
+@media (min-width: 992px) {
+  .sigest-sidebar-col { flex: 0 0 250px; width: 250px; background: var(--sigest-azul); }
+}
+
+.sigest-main { min-width: 0; }
+
+/* Títulos de página, com um pequeno traço dourado */
+.sigest-titulo::after {
+  content: ""; display: block; width: 44px; height: 3px;
+  margin-top: .5rem; border-radius: 2px; background: var(--sigest-dourado);
+}
+
+/* Cartões e tabelas */
+.card { --bs-card-border-color: var(--sigest-borda); box-shadow: 0 1px 2px rgba(16, 24, 40, .05); }
+.table thead th {
+  background: #EEF1F6; font-size: .8rem; font-weight: 600;
+  color: #4A5568; border-bottom: 1px solid var(--sigest-borda);
+}
+.form-label { font-weight: 500; }
+
+/* Rodapés */
+.sigest-footer { border-top: 1px solid var(--sigest-borda); background: #fff; color: #5B6472; }
+.sigest-footer-publico {
+  background: var(--sigest-azul-escuro); color: rgba(255, 255, 255, .85);
+  border-top: 3px solid var(--sigest-dourado);
+}
+
+/* Página pública */
+.sigest-hero {
+  background: linear-gradient(135deg, var(--sigest-azul) 0%, var(--sigest-azul-claro) 100%);
+  color: #fff; border-bottom: 4px solid var(--sigest-dourado);
+}
+.sigest-ouro { color: var(--sigest-dourado); }
+.sigest-composicao {
+  background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 1rem; padding: 1.25rem;
+}
+.sigest-passo { display: flex; align-items: center; gap: 1rem; }
+.sigest-passo > i {
+  font-size: 1.6rem; color: var(--sigest-dourado);
+  width: 3rem; height: 3rem; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(255, 255, 255, .1);
+}
+.sigest-passo span { display: block; font-size: .85rem; color: rgba(255, 255, 255, .75); }
+.sigest-seta { padding-left: 1rem; color: rgba(255, 255, 255, .5); line-height: 1.6; }
+.sigest-numero {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2rem; height: 2rem; border-radius: 50%; margin-bottom: .5rem;
+  background: var(--sigest-azul); color: #fff; font-weight: 600; font-size: .9rem;
+}
+
+/* Barras de progresso a dourado */
+.progress { --bs-progress-bar-bg: var(--sigest-dourado); --bs-progress-height: .5rem; }
+
+/* Larguras de leitura nas páginas internas */
+.sigest-estreito { max-width: 48rem; }
+.sigest-medio { max-width: 64rem; }
+
+/* Kanban */
+.sigest-coluna { background: #fff; border: 1px solid var(--sigest-borda); border-radius: .75rem; min-height: 10rem; transition: background-color .15s, box-shadow .15s; }
+.sigest-cartao[draggable="true"] { cursor: grab; }
+.sigest-cartao[draggable="true"]:active { cursor: grabbing; }
+.sigest-cartao.a-arrastar { opacity: .4; }
+.sigest-coluna.alvo-possivel { box-shadow: 0 0 0 2px var(--sigest-dourado); }
+.sigest-coluna.alvo-activo { background: #FBF6EA; }
+dialog.sigest-dialog { border: 1px solid var(--sigest-borda); border-radius: .75rem; padding: 1.5rem; max-width: 28rem; width: calc(100% - 2rem); }
+dialog.sigest-dialog::backdrop { background: rgba(8, 30, 66, .55); }
+.sigest-aviso { position: fixed; right: 1rem; bottom: 1rem; z-index: 2000; max-width: 24rem; }
+
+/* Fotografias do INSTIC */
+.sigest-hero {
+  background:
+    linear-gradient(100deg, rgba(8, 30, 66, .94) 0%, rgba(11, 42, 91, .84) 45%, rgba(11, 42, 91, .55) 100%),
+    url("../img/hero_instic.jpg") center 35% / cover no-repeat;
+}
+@media (max-width: 991.98px) {
+  .sigest-hero {
+    background:
+      linear-gradient(rgba(8, 30, 66, .88), rgba(8, 30, 66, .88)),
+      url("../img/hero_instic.jpg") 30% center / cover no-repeat;
+  }
+}
+.sigest-composicao { backdrop-filter: blur(4px); }
+
+.sigest-foto {
+  display: block; width: 100%; max-height: 34rem;
+  aspect-ratio: 3 / 4; object-fit: cover; object-position: center 40%;
+  border-radius: .75rem; border-bottom: 4px solid var(--sigest-dourado);
+  box-shadow: 0 .5rem 1.5rem rgba(8, 30, 66, .18);
+}
+
+.sigest-login-foto {
+  min-height: 100%;
+  background:
+    linear-gradient(to top, rgba(8, 30, 66, .85), rgba(8, 30, 66, .15) 55%),
+    url("../img/login_instic.jpg") center / cover no-repeat;
+  color: #fff; display: flex; align-items: flex-end;
+}
+
+/* Etapas da candidatura */
+.sigest-etapas { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; }
+.sigest-etapas li { display: flex; align-items: center; gap: .4rem; font-size: .85rem; color: #6C757D; }
+.sigest-etapas li span {
+  width: 1.5rem; height: 1.5rem; border-radius: 50%; border: 2px solid #ADB5BD;
+  display: inline-flex; align-items: center; justify-content: center; font-size: .75rem;
+}
+.sigest-etapas li.feita { color: #198754; }
+.sigest-etapas li.feita span { background: #198754; border-color: #198754; color: #fff; }
+.sigest-etapas li.atual { color: var(--sigest-azul); font-weight: 600; }
+.sigest-etapas li.atual span { background: var(--sigest-azul); border-color: var(--sigest-azul); color: #fff; }

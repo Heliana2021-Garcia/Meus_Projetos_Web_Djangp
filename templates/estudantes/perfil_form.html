@@ -1,17 +1,16 @@
 {% extends "layouts/base.html" %}
 {% block titulo %}Editar perfil{% endblock %}
 {% block conteudo %}
-<div class="mx-auto max-w-2xl px-4 py-10">
-  <h1 class="text-2xl font-semibold">Editar perfil</h1>
-  <form method="post" enctype="multipart/form-data" class="mt-6 space-y-4 rounded-2xl border border-instic-borda bg-instic-surface p-6" novalidate>
+{% include "components/cabecalho_pagina.html" with titulo="Editar perfil" descricao="Actualize os dados permitidos, o currículo e as tecnologias." %}
+<div class="card sigest-estreito"><div class="card-body p-4">
+  <form method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
-    {% for campo in form %}
-      {% include "components/campo.html" %}
-    {% endfor %}
-    <div class="flex gap-3">
-      <button type="submit" class="btn-ouro">Guardar</button>
-      <a href="{% url 'estudantes:painel' %}" class="rounded-lg border border-instic-borda px-4 py-2 text-sm hover:border-instic-gold">Cancelar</a>
+    {% if form.non_field_errors %}<div class="alert alert-danger py-2 small">{{ form.non_field_errors.0 }}</div>{% endif %}
+    {% for campo in form %}{% include "components/campo.html" %}{% endfor %}
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary">Guardar</button>
+      <a href="{% url 'estudantes:painel' %}" class="btn btn-outline-secondary">Cancelar</a>
     </div>
   </form>
-</div>
+</div></div>
 {% endblock %}

@@ -1,64 +1,126 @@
 {% load static %}<!DOCTYPE html>
-<html lang="pt">
+<html lang="pt" data-bs-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block titulo %}SIGEST{% endblock %} | INSTIC</title>
-  <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
-  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/sigest.css' %}">
 </head>
-<body class="min-h-screen">
-  <header class="border-b border-instic-borda bg-instic-surface">
-    <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-      <div class="flex items-center gap-6">
-        <a href="{% url 'contas:inicio' %}" class="flex items-center gap-2 font-semibold">
-          <i class='bx bxs-graduation text-2xl text-instic-gold'></i> SIGEST
-        </a>
-        {% if user.is_authenticated %}
-        <nav class="flex items-center gap-4 text-sm text-texto-secundario">
-          <a href="{% url 'contas:inicio' %}" class="hover:text-texto-principal">Painel</a>
-          {% if user.e_estudante %}
-          <a href="{% url 'vagas:feed' %}" class="hover:text-texto-principal">Vagas</a>
-          <a href="{% url 'candidaturas:minhas' %}" class="hover:text-texto-principal">Candidaturas</a>
-          {% elif user.e_empresa %}
-          <a href="{% url 'vagas:minhas' %}" class="hover:text-texto-principal">Minhas vagas</a>
-          {% elif user.e_administrador %}
-          <a href="{% url 'relatorios:dashboard' %}" class="hover:text-texto-principal">Relatórios</a>
-          {% endif %}
-        </nav>
-        {% endif %}
-      </div>
-      {% if user.is_authenticated %}
-      <div class="flex items-center gap-4 text-sm">
-        <a href="{% url 'core:notificacoes' %}" class="relative text-texto-secundario hover:text-texto-principal" title="Notificações">
-          <i class='bx bx-bell text-xl'></i>
-          {% if notificacoes_nao_lidas %}
-          <span class="absolute -right-2 -top-2 rounded-full bg-instic-gold px-1.5 text-[10px] font-semibold text-instic-bg">{{ notificacoes_nao_lidas }}</span>
-          {% endif %}
-        </a>
-        <span class="text-texto-secundario">
-          <i class='bx bx-user'></i> {{ user.get_full_name|default:user.username }} &middot; {{ user.get_tipo_display }}
+<body class="d-flex flex-column min-vh-100">
+{% with vn=request.resolver_match.view_name ns=request.resolver_match.namespace %}
+
+  <header class="sigest-topbar">
+    <div class="d-flex align-items-center gap-3 px-3 py-2">
+      <button class="btn btn-outline-primary d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuLateral" aria-controls="menuLateral" aria-label="Abrir menu">
+        <i class="bi bi-list"></i>
+      </button>
+      <a href="{% url 'contas:inicio' %}" class="d-flex align-items-center gap-3 text-decoration-none">
+        <img src="{% static 'img/logo_instic.png' %}" alt="Universidade de Luanda — INSTIC" class="sigest-logo">
+        <span class="d-none d-md-block border-start ps-3">
+          <span class="d-block fw-bold lh-1 text-primary">SIGEST</span>
+          <small class="text-secondary">Gestão de Estágios e Inserção Profissional</small>
         </span>
-        <form method="post" action="{% url 'contas:sair' %}">
-          {% csrf_token %}
-          <button type="submit" class="flex items-center gap-1 text-instic-gold hover:underline">
-            <i class='bx bx-log-out'></i> Sair
+      </a>
+
+      <div class="ms-auto d-flex align-items-center gap-2">
+        <a href="{% url 'core:notificacoes' %}" class="btn btn-light position-relative" title="Notificações" aria-label="Notificações">
+          <i class="bi bi-bell"></i>
+          {% if notificacoes_nao_lidas %}
+          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-warning">{{ notificacoes_nao_lidas }}<span class="visually-hidden"> notificações por ler</span></span>
+          {% endif %}
+        </a>
+        <div class="dropdown">
+          <button class="btn btn-light dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-person-circle"></i>
+            <span class="d-none d-sm-inline">{{ user.get_full_name|default:user.username }}</span>
           </button>
-        </form>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><span class="dropdown-item-text small text-secondary">{{ user.get_tipo_display }}</span></li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <form method="post" action="{% url 'contas:sair' %}">
+                {% csrf_token %}
+                <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right me-2"></i>Sair</button>
+              </form>
+            </li>
+          </ul>
+        </div>
       </div>
-      {% endif %}
     </div>
   </header>
 
-  {% if messages %}
-  <div class="mx-auto max-w-6xl space-y-2 px-4 pt-4">
-    {% for m in messages %}
-    <div class="rounded-lg border px-3 py-2 text-sm {% if m.level_tag == 'error' %}border-red-500/40 bg-red-500/10 text-red-300{% else %}border-instic-gold/40 bg-instic-gold/10{% endif %}">{{ m }}</div>
-    {% endfor %}
-  </div>
-  {% endif %}
+  <div class="d-flex flex-grow-1">
+    <aside class="sigest-sidebar-col">
+      <nav id="menuLateral" class="offcanvas-lg offcanvas-start sigest-sidebar" tabindex="-1" aria-labelledby="menuLateralTitulo">
+        <div class="offcanvas-header">
+          <h5 class="offcanvas-title" id="menuLateralTitulo">Menu</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" data-bs-target="#menuLateral" aria-label="Fechar"></button>
+        </div>
+        <div class="offcanvas-body">
+          <ul class="nav flex-column gap-1 w-100">
+            {% if user.e_estudante %}
+            <li class="nav-item"><a class="nav-link {% if vn == 'estudantes:painel' %}active{% endif %}" href="{% url 'estudantes:painel' %}"><i class="bi bi-speedometer2"></i> Painel</a></li>
+            <li class="nav-item"><a class="nav-link {% if vn == 'vagas:feed' or vn == 'vagas:detalhe' %}active{% endif %}" href="{% url 'vagas:feed' %}"><i class="bi bi-briefcase"></i> Oportunidades</a></li>
+            <li class="nav-item"><a class="nav-link {% if vn == 'candidaturas:minhas' %}active{% endif %}" href="{% url 'candidaturas:minhas' %}"><i class="bi bi-list-check"></i> Candidaturas</a></li>
+            <li class="nav-item"><a class="nav-link {% if vn == 'candidaturas:estagio' %}active{% endif %}" href="{% url 'candidaturas:estagio' %}"><i class="bi bi-mortarboard"></i> Estágio</a></li>
+            <li class="nav-item"><a class="nav-link {% if vn == 'estudantes:documentos' %}active{% endif %}" href="{% url 'estudantes:documentos' %}"><i class="bi bi-folder2-open"></i> Documentos</a></li>
+            <li class="nav-item"><a class="nav-link {% if vn == 'candidaturas:diario' or vn == 'candidaturas:registo_editar' %}active{% endif %}" href="{% url 'candidaturas:diario' %}"><i class="bi bi-journal-text"></i> Diário</a></li>
+            <li class="nav-item"><a class="nav-link {% if vn == 'candidaturas:relatorios' or vn == 'candidaturas:relatorio' %}active{% endif %}" href="{% url 'candidaturas:relatorios' %}"><i class="bi bi-file-earmark-text"></i> Relatórios</a></li>
+            <li class="nav-item"><a class="nav-link {% if vn == 'candidaturas:minha_avaliacao' or vn == 'candidaturas:avaliacao' %}active{% endif %}" href="{% url 'candidaturas:minha_avaliacao' %}"><i class="bi bi-award"></i> Avaliação</a></li>
+            <li class="nav-item"><a class="nav-link {% if vn == 'estudantes:perfil' %}active{% endif %}" href="{% url 'estudantes:perfil' %}"><i class="bi bi-person-vcard"></i> O meu perfil</a></li>
 
-  <main>{% block conteudo %}{% endblock %}</main>
+            {% elif user.e_empresa %}
+            <li class="nav-item"><a class="nav-link {% if vn == 'empresas:painel' %}active{% endif %}" href="{% url 'empresas:painel' %}"><i class="bi bi-speedometer2"></i> Painel</a></li>
+            <li class="nav-item"><a class="nav-link {% if ns == 'vagas' or vn == 'candidaturas:kanban' %}active{% endif %}" href="{% url 'vagas:minhas' %}"><i class="bi bi-briefcase"></i> Vagas e candidatos</a></li>
+            <li class="nav-item"><a class="nav-link {% if vn == 'candidaturas:estagios' %}active{% endif %}" href="{% url 'candidaturas:estagios' %}"><i class="bi bi-mortarboard"></i> Estágios</a></li>
+            <li class="nav-item"><a class="nav-link {% if vn == 'empresas:orientadores' %}active{% endif %}" href="{% url 'empresas:orientadores' %}"><i class="bi bi-person-workspace"></i> Orientadores</a></li>
+
+            {% elif user.e_orientador %}
+            <li class="nav-item"><a class="nav-link {% if vn == 'empresas:painel_orientador' %}active{% endif %}" href="{% url 'empresas:painel_orientador' %}"><i class="bi bi-speedometer2"></i> Os meus estagiários</a></li>
+
+            {% elif user.e_gestao %}
+            <li class="nav-item"><a class="nav-link {% if vn == 'relatorios:painel' %}active{% endif %}" href="{% url 'relatorios:painel' %}"><i class="bi bi-speedometer2"></i> Painel</a></li>
+            <li class="nav-item"><a class="nav-link {% if vn == 'relatorios:estudantes_pendentes' %}active{% endif %}" href="{% url 'relatorios:estudantes_pendentes' %}"><i class="bi bi-person-check"></i> Registos de estudantes</a></li>
+            <li class="nav-item"><a class="nav-link {% if vn == 'relatorios:vagas_analise' %}active{% endif %}" href="{% url 'relatorios:vagas_analise' %}"><i class="bi bi-clipboard-check"></i> Vagas em análise</a></li>
+            <li class="nav-item"><a class="nav-link {% if vn == 'relatorios:estagios' %}active{% endif %}" href="{% url 'relatorios:estagios' %}"><i class="bi bi-mortarboard"></i> Estágios</a></li>
+            <li class="nav-item"><a class="nav-link {% if vn == 'relatorios:dashboard' %}active{% endif %}" href="{% url 'relatorios:dashboard' %}"><i class="bi bi-bar-chart-line"></i> Relatórios</a></li>
+            <li class="nav-item"><a class="nav-link {% if vn == 'relatorios:relatorio_estagios' %}active{% endif %}" href="{% url 'relatorios:relatorio_estagios' %}"><i class="bi bi-table"></i> Relatório de estágios</a></li>
+            <li class="nav-item"><a class="nav-link {% if vn == 'relatorios:decisoes' %}active{% endif %}" href="{% url 'relatorios:decisoes' %}"><i class="bi bi-clock-history"></i> Registo de decisões</a></li>
+            {% if user.is_superuser %}
+            <li class="nav-item"><a class="nav-link" href="{% url 'admin:index' %}"><i class="bi bi-gear"></i> Administração técnica</a></li>
+            {% endif %}
+            {% endif %}
+          </ul>
+        </div>
+      </nav>
+    </aside>
+
+    <main class="sigest-main flex-grow-1 p-3 p-lg-4">
+      {% if messages %}
+      <div class="mb-3">
+        {% for m in messages %}
+        <div class="alert alert-{% if m.level_tag == 'error' %}danger{% else %}{{ m.level_tag }}{% endif %} alert-dismissible fade show" role="alert">
+          {{ m }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% block conteudo %}{% endblock %}
+    </main>
+  </div>
+
+  <footer class="sigest-footer">
+    <div class="d-flex flex-wrap justify-content-between gap-2 px-3 py-3 small">
+      <span>© {% now "Y" %} Universidade de Luanda · Instituto de Tecnologias de Informação e Comunicação (INSTIC)</span>
+      <span>SIGEST — Sistema de Gestão de Estágios e Inserção Profissional</span>
+    </div>
+  </footer>
+
+{% endwith %}
+  <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

@@ -1,0 +1,4 @@
+{% if c.estagio_estado == 'EM_CURSO' %}<span class="badge text-bg-success"><i class="bi bi-play-circle me-1"></i>Em curso</span>
+{% elif c.estagio_estado == 'INTERROMPIDO' %}<span class="badge text-bg-danger"><i class="bi bi-stop-circle me-1"></i>Interrompido</span>
+{% elif c.estagio_estado == 'CONCLUIDO' %}<span class="badge text-bg-primary"><i class="bi bi-check-circle me-1"></i>Concluído</span>
+{% elif c.estagio_estado == 'POR_INICIAR' %}<span class="badge text-bg-warning"><i class="bi bi-hourglass-split me-1"></i>Por iniciar</span>{% endif %}

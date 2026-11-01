@@ -186,3 +186,48 @@ dialog.sigest-dialog::backdrop { background: rgba(8, 30, 66, .55); }
 .sigest-etapas li.feita span { background: #198754; border-color: #198754; color: #fff; }
 .sigest-etapas li.atual { color: var(--sigest-azul); font-weight: 600; }
 .sigest-etapas li.atual span { background: var(--sigest-azul); border-color: var(--sigest-azul); color: #fff; }
+
+
+/* --- Ecrã de entrada --- */
+.sigest-entrar-card {
+  border: 0;
+  border-top: 4px solid var(--sigest-dourado);
+  border-radius: .75rem;
+  overflow: hidden;
+  box-shadow: 0 .5rem 1.5rem rgba(8, 30, 66, .10);
+}
+.sigest-entrar-card .row { min-height: 560px; }
+.sigest-entrar-painel {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  padding: 2.25rem;
+  color: #fff;
+  background:
+    linear-gradient(165deg, rgba(8, 30, 66, .92) 0%, rgba(11, 42, 91, .82) 60%, rgba(11, 42, 91, .72) 100%),
+    url("../img/fachada_instic.jpg") center / cover no-repeat;
+}
+.sigest-entrar-painel .etiqueta { color: var(--sigest-dourado); font-size: .85rem; font-weight: 600; }
+.sigest-entrar-painel h2 { font-size: 2rem; font-weight: 700; margin: .25rem 0 0; }
+.sigest-entrar-painel .linha-ouro { width: 48px; height: 3px; background: var(--sigest-dourado); border-radius: 2px; margin: .75rem 0 1rem; }
+.sigest-entrar-painel ul { list-style: none; padding: 0; margin: 0; }
+.sigest-entrar-painel li { display: flex; gap: .6rem; align-items: flex-start; margin-bottom: .65rem; font-size: .92rem; }
+.sigest-entrar-painel li i { color: var(--sigest-dourado); font-size: 1.1rem; line-height: 1.3; }
+.sigest-entrar-form .form-label { font-weight: 600; font-size: .9rem; }
+.sigest-entrar-form .input-group-text { background: var(--sigest-cinza-claro); color: var(--sigest-azul); }
+.sigest-entrar-form .form-control:focus {
+  border-color: var(--sigest-azul-claro);
+  box-shadow: 0 0 0 .2rem rgba(27, 66, 134, .20);
+}
+.sigest-entrar-logo { height: 64px; width: auto; }
+.sigest-entrar-ou {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin: 1.5rem 0 1rem;
+  color: #6c757d;
+  font-size: .85rem;
+}
+.sigest-entrar-ou::before,
+.sigest-entrar-ou::after { content: ""; flex: 1; border-top: 1px solid var(--sigest-borda); }

@@ -17,6 +17,21 @@ TECNOLOGIAS = [
     "Análise de dados", "Gestão de projectos", "Suporte técnico",
 ]
 
+# Telecomunicações
+TECNOLOGIAS += [
+    "Comunicações móveis (4G/5G)", "Fibra óptica", "Radiofrequência e antenas",
+    "Sistemas de transmissão", "Telefonia IP (VoIP)", "Cabeamento estruturado",
+    "Redes sem fios (Wi-Fi)", "Routing e switching", "MikroTik",
+    "Segurança de redes", "Monitorização de redes", "Internet das Coisas (IoT)",
+]
+# Informática de Gestão
+TECNOLOGIAS += [
+    "Sistemas de informação", "ERP", "Business Intelligence", "MySQL",
+    "Modelação de processos de negócio", "Análise de requisitos",
+    "Metodologias ágeis (Scrum)", "Contabilidade e facturação",
+    "Comércio electrónico", "Gestão de stocks", "Documentação técnica",
+]
+
 for nome in TECNOLOGIAS:
     Tecnologia.objects.get_or_create(nome=nome)
 

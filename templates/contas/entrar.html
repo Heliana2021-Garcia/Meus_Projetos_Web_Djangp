@@ -2,43 +2,130 @@
 {% load static %}
 {% block titulo %}Entrar{% endblock %}
 {% block conteudo %}
-<div class="container py-5">
+<div class="container py-4 py-lg-5">
   <div class="row justify-content-center">
-    <div class="col-md-10 col-lg-9 col-xl-8">
-      <div class="card shadow-sm overflow-hidden">
+    <div class="col-md-10 col-lg-10 col-xl-9">
+      <div class="card sigest-entrar-card">
         <div class="row g-0">
+
           <div class="col-lg-5 d-none d-lg-block">
-            <div class="sigest-login-foto p-4" role="img" aria-label="Fachada do edifício do INSTIC">
+            <div class="sigest-entrar-painel" role="img" aria-label="Fachada do edifício do INSTIC">
               <div>
-                <p class="small sigest-ouro fw-semibold mb-1">Universidade de Luanda · INSTIC</p>
-                <p class="h5 mb-0">Estágios e inserção profissional num só lugar.</p>
+                <p class="etiqueta mb-1">Universidade de Luanda · INSTIC</p>
+                <h2>SIGEST</h2>
+                <div class="linha-ouro"></div>
+                <p class="mb-0">Gestão de estágios e inserção profissional num só lugar, do registo à conclusão.</p>
               </div>
+              <ul>
+                <li><i class="bi bi-person-check" aria-hidden="true"></i><span>Registo validado e candidaturas acompanhadas por fases</span></li>
+                <li><i class="bi bi-journal-text" aria-hidden="true"></i><span>Diário de actividades e relatórios validados pelo orientador</span></li>
+                <li><i class="bi bi-patch-check" aria-hidden="true"></i><span>Avaliação, conclusão e certificado em PDF</span></li>
+              </ul>
             </div>
           </div>
+
           <div class="col-lg-7">
-            <div class="card-body p-4 p-xl-5">
+            <div class="card-body p-4 p-xl-5 sigest-entrar-form">
               <div class="text-center mb-4">
-                <img src="{% static 'img/logo_instic.png' %}" alt="Universidade de Luanda — INSTIC" class="sigest-logo-grande mb-3">
-                <h1 class="h5 mb-1">Entrar no SIGEST</h1>
+                <img src="{% static 'img/logo_instic.png' %}" alt="Universidade de Luanda — INSTIC" class="sigest-entrar-logo mb-3">
+                <h1 class="h4 mb-1">Entrar no SIGEST</h1>
                 <p class="small text-secondary mb-0">Sistema de Gestão de Estágios e Inserção Profissional</p>
               </div>
-              <form method="post" novalidate>
+
+              <form method="post" novalidate id="formulario-entrada">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ next }}">
+
                 {% if form.non_field_errors %}
-                <div class="alert alert-danger py-2 small" role="alert">{{ form.non_field_errors.0 }}</div>
+                <div class="alert alert-danger d-flex align-items-start gap-2 py-2 small" role="alert">
+                  <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                  <span>{{ form.non_field_errors.0 }}</span>
+                </div>
                 {% endif %}
-                {% for campo in form %}{% include "components/campo.html" %}{% endfor %}
-                <button type="submit" class="btn btn-primary w-100">Entrar</button>
+
+                <div class="mb-3">
+                  <label class="form-label" for="id_username">Email <span class="text-danger" aria-hidden="true">*</span></label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-envelope" aria-hidden="true"></i></span>
+                    <input type="email" name="username" id="id_username" required autofocus
+                           class="form-control{% if form.username.errors %} is-invalid{% endif %}"
+                           value="{{ form.username.value|default:'' }}"
+                           autocomplete="email" autocapitalize="none" spellcheck="false"
+                           placeholder="nome@exemplo.ao"
+                           {% if form.username.errors %}aria-describedby="erro-email" aria-invalid="true"{% endif %}>
+                  </div>
+                  {% if form.username.errors %}<div class="invalid-feedback d-block" id="erro-email">{{ form.username.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="mb-4">
+                  <label class="form-label" for="id_password">Palavra-passe <span class="text-danger" aria-hidden="true">*</span></label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-lock" aria-hidden="true"></i></span>
+                    <input type="password" name="password" id="id_password" required
+                           class="form-control{% if form.password.errors %} is-invalid{% endif %}"
+                           autocomplete="current-password"
+                           {% if form.password.errors %}aria-describedby="erro-palavra-passe" aria-invalid="true"{% endif %}>
+                    <button type="button" class="btn btn-outline-secondary" id="alternar-palavra-passe"
+                            aria-label="Mostrar palavra-passe" aria-pressed="false">
+                      <i class="bi bi-eye" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                  {% if form.password.errors %}<div class="invalid-feedback d-block" id="erro-palavra-passe">{{ form.password.errors.0 }}</div>{% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2" id="botao-entrar">
+                  <span class="spinner-border spinner-border-sm d-none me-2" aria-hidden="true"></span>
+                  <span class="rotulo">Entrar</span>
+                </button>
               </form>
-              <hr>
-              <p class="small text-center mb-1"><a href="{% url 'contas:registo_estudante' %}">Criar conta de estudante</a></p>
-              <p class="small text-center mb-0"><a href="{% url 'contas:registo_empresa' %}">Pedir parceria (empresas)</a></p>
+
+              <div class="sigest-entrar-ou">Ainda não tem conta?</div>
+              <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                <a class="btn btn-outline-primary btn-sm px-3" href="{% url 'contas:registo_estudante' %}">
+                  <i class="bi bi-mortarboard me-1" aria-hidden="true"></i>Criar conta de estudante
+                </a>
+                <a class="btn btn-outline-secondary btn-sm px-3" href="{% url 'contas:registo_empresa' %}">
+                  <i class="bi bi-building me-1" aria-hidden="true"></i>Pedir parceria (empresas)
+                </a>
+              </div>
             </div>
           </div>
+
         </div>
       </div>
     </div>
   </div>
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  var campo = document.getElementById('id_password');
+  var alternar = document.getElementById('alternar-palavra-passe');
+  if (campo && alternar) {
+    alternar.addEventListener('click', function () {
+      var visivel = campo.type === 'text';
+      campo.type = visivel ? 'password' : 'text';
+      alternar.setAttribute('aria-pressed', visivel ? 'false' : 'true');
+      alternar.setAttribute('aria-label', visivel ? 'Mostrar palavra-passe' : 'Esconder palavra-passe');
+      alternar.querySelector('i').className = visivel ? 'bi bi-eye' : 'bi bi-eye-slash';
+    });
+  }
+  var form = document.getElementById('formulario-entrada');
+  var botao = document.getElementById('botao-entrar');
+  function repor() {
+    botao.disabled = false;
+    botao.querySelector('.spinner-border').classList.add('d-none');
+    botao.querySelector('.rotulo').textContent = 'Entrar';
+  }
+  if (form && botao) {
+    form.addEventListener('submit', function () {
+      botao.disabled = true;
+      botao.querySelector('.spinner-border').classList.remove('d-none');
+      botao.querySelector('.rotulo').textContent = 'A entrar…';
+    });
+    window.addEventListener('pageshow', repor);
+  }
+})();
+</script>
 {% endblock %}

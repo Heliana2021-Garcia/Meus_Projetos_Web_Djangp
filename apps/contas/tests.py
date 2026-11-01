@@ -280,3 +280,38 @@ class Pagina500Tests(TestCase):
         html = render_to_string("500.html")
         self.assertIn("Ocorreu um erro", html)
         self.assertIn("SIGEST", html)
+
+
+class EntrarVisualTests(TestCase):
+    def test_pagina_tem_campos_e_ligacoes(self):
+        r = self.client.get("/entrar/")
+        for texto in ('name="username"', 'name="password"', "csrfmiddlewaretoken",
+                      "Criar conta de estudante", "Pedir parceria", "Mostrar palavra-passe"):
+            self.assertContains(r, texto)
+
+    def test_credenciais_erradas_mostram_a_mensagem(self):
+        r = self.client.post("/entrar/", {"username": "x@y.ao", "password": "errada"})
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "incorretos")
+
+    def test_campos_vazios_assinalam_erro_junto_ao_campo(self):
+        r = self.client.post("/entrar/", {"username": "", "password": ""})
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "is-invalid")
+
+class EntrarVisualTests(TestCase):
+    def test_pagina_tem_campos_e_ligacoes(self):
+        r = self.client.get("/entrar/")
+        for texto in ('name="username"', 'name="password"', "csrfmiddlewaretoken",
+                      "Criar conta de estudante", "Pedir parceria", "Mostrar palavra-passe"):
+            self.assertContains(r, texto)
+
+    def test_credenciais_erradas_mostram_a_mensagem(self):
+        r = self.client.post("/entrar/", {"username": "x@y.ao", "password": "errada"})
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "incorretos")
+
+    def test_campos_vazios_assinalam_erro_junto_ao_campo(self):
+        r = self.client.post("/entrar/", {"username": "", "password": ""})
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "is-invalid")

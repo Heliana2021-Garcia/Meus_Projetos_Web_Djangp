@@ -14,10 +14,10 @@
     <div class="container d-flex align-items-center gap-3 py-2">
       <a href="{% url 'contas:publica' %}" class="d-flex align-items-center gap-3 text-decoration-none">
         <img src="{% static 'img/logo_instic.png' %}" alt="Universidade de Luanda — INSTIC" class="sigest-logo">
-        <span class="d-none d-md-block border-start ps-3">
+        {% block marca_texto %}<span class="d-none d-md-block border-start ps-3">
           <span class="d-block fw-bold lh-1 text-primary">SIGEST</span>
           <small class="text-secondary">Gestão de Estágios e Inserção Profissional</small>
-        </span>
+        </span>{% endblock %}
       </a>
       <nav class="ms-auto d-flex align-items-center gap-2">
         

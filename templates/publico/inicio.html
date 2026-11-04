@@ -2,91 +2,23 @@
 {% load static %}
 {% block titulo %}Gestão de Estágios e Inserção Profissional{% endblock %}
 {% block conteudo %}
-
-<section class="sigest-hero">
-  <div class="container py-4 py-lg-5">
-    <div class="row align-items-center g-4 g-lg-5">
-      <div class="col-lg-7">
-        <p class="small fw-semibold mb-2 sigest-ouro">Universidade de Luanda · INSTIC</p>
-        <h1 class="display-5 fw-bold mb-3">SIGEST</h1>
-        <p class="lead mb-4">Gestão de estágios e inserção profissional dos estudantes do INSTIC, do registo à conclusão.</p>
-        <div class="d-flex flex-wrap gap-2">
-          {% if user.is_authenticated %}
-          <a class="btn btn-ouro btn-lg" href="{% url 'contas:inicio' %}">Ir para o painel</a>
-          {% else %}
-          <a class="btn btn-ouro btn-lg" href="{% url 'contas:entrar' %}">Entrar</a>
-          <a class="btn btn-outline-light btn-lg" href="{% url 'contas:registo_estudante' %}">Criar conta de estudante</a>
-          <a class="btn btn-outline-light btn-lg" href="{% url 'contas:registo_empresa' %}">Pedir parceria (empresas)</a>
-          {% endif %}
-        </div>
-      </div>
-      <div class="col-lg-5 d-none d-lg-block">
-        <img src="{% static 'img/fachada_instic.jpg' %}" alt="Fachada do edifício do INSTIC, com o vidro azul e os jardins"
-             class="sigest-foto w-100" style="max-height: 300px; object-fit: cover;" width="900" height="1196">
-      </div>
+<section class="d-flex align-items-center justify-content-center text-center text-white"
+         style="min-height: calc(100vh - 150px); background: linear-gradient(rgba(8, 30, 66, .55), rgba(8, 30, 66, .78)), url('{% static 'img/fachada_instic.jpg' %}') center / cover no-repeat;"
+         role="img" aria-label="Fachada do edifício do INSTIC, com o vidro azul e os jardins">
+  <div class="container py-5">
+    <div class="bg-white rounded-3 shadow d-inline-block px-4 py-3 mb-4">
+      <img src="{% static 'img/logo_instic.png' %}" alt="Universidade de Luanda — INSTIC" style="height: 84px; width: auto;">
+    </div>
+    <h1 class="fs-2 fw-semibold mb-4">Da formação à experiência profissional.</h1>
+    <div class="d-flex flex-wrap justify-content-center gap-2">
+      {% if user.is_authenticated %}
+      <a class="btn btn-ouro btn-lg" href="{% url 'contas:inicio' %}">Ir para o painel</a>
+      {% else %}
+      <a class="btn btn-ouro btn-lg" href="{% url 'contas:entrar' %}">Entrar</a>
+      <a class="btn btn-outline-light btn-lg" href="{% url 'contas:registo_estudante' %}">Criar conta de estudante</a>
+      <a class="btn btn-outline-light btn-lg" href="{% url 'contas:registo_empresa' %}">Pedir parceria</a>
+      {% endif %}
     </div>
   </div>
 </section>
-
-<section id="como-funciona" class="container py-4 py-lg-5">
-  <h2 class="h4 sigest-titulo mb-3">Como funciona o processo de estágio</h2>
-  <div class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-2">
-    <div class="col"><div class="card h-100 text-center p-2"><span class="sigest-numero mx-auto">1</span><span class="small fw-semibold">Registo e validação</span></div></div>
-    <div class="col"><div class="card h-100 text-center p-2"><span class="sigest-numero mx-auto">2</span><span class="small fw-semibold">Parceria e vagas</span></div></div>
-    <div class="col"><div class="card h-100 text-center p-2"><span class="sigest-numero mx-auto">3</span><span class="small fw-semibold">Candidatura</span></div></div>
-    <div class="col"><div class="card h-100 text-center p-2"><span class="sigest-numero mx-auto">4</span><span class="small fw-semibold">Selecção</span></div></div>
-    <div class="col"><div class="card h-100 text-center p-2"><span class="sigest-numero mx-auto">5</span><span class="small fw-semibold">Estágio</span></div></div>
-    <div class="col"><div class="card h-100 text-center p-2"><span class="sigest-numero mx-auto">6</span><span class="small fw-semibold">Avaliação e conclusão</span></div></div>
-  </div>
-  <details class="mt-3">
-    <summary class="small text-primary" style="cursor: pointer;">Ver o detalhe de cada passo</summary>
-    <ol class="small text-secondary mt-2 mb-0">
-      <li>O estudante regista-se e entrega os documentos exigidos. A coordenação valida o registo.</li>
-      <li>A empresa pede parceria ao INSTIC. As vagas só ficam visíveis depois de validadas pela coordenação.</li>
-      <li>Os estudantes elegíveis candidatam-se às vagas abertas e dentro do prazo.</li>
-      <li>A empresa conduz as fases: teste psicotécnico, análise do currículo, entrevista presencial e decisão final.</li>
-      <li>Atribuição do orientador, confirmação de início, diário de actividades e relatórios.</li>
-      <li>Avaliação pelos intervenientes, nota final e documentos de conclusão.</li>
-    </ol>
-  </details>
-</section>
-
-<section class="bg-white border-top border-bottom py-4">
-  <div class="container">
-    <h2 class="h4 sigest-titulo mb-3">Quem participa</h2>
-    <div class="row row-cols-2 row-cols-lg-4 g-3">
-      <div class="col d-flex gap-2"><i class="bi bi-mortarboard fs-4 text-primary"></i><div><strong class="small d-block">Estudantes</strong><span class="small text-secondary">Candidatam-se e acompanham o estágio.</span></div></div>
-      <div class="col d-flex gap-2"><i class="bi bi-building fs-4 text-primary"></i><div><strong class="small d-block">Empresas</strong><span class="small text-secondary">Publicam vagas e acolhem estagiários.</span></div></div>
-      <div class="col d-flex gap-2"><i class="bi bi-patch-check fs-4 text-primary"></i><div><strong class="small d-block">Coordenação institucional</strong><span class="small text-secondary">Valida e monitoriza os estágios.</span></div></div>
-      <div class="col d-flex gap-2"><i class="bi bi-person-workspace fs-4 text-primary"></i><div><strong class="small d-block">Orientadores empresariais</strong><span class="small text-secondary">Acompanham, validam e avaliam.</span></div></div>
-    </div>
-  </div>
-</section>
-
-<section id="faq" class="container py-4 py-lg-5">
-  <h2 class="h4 sigest-titulo mb-3">Perguntas frequentes</h2>
-  <div class="accordion" id="perguntas">
-    <div class="accordion-item">
-      <h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#p1" aria-expanded="false" aria-controls="p1">Quem pode candidatar-se a um estágio?</button></h3>
-      <div id="p1" class="accordion-collapse collapse" data-bs-parent="#perguntas"><div class="accordion-body">Estudantes do INSTIC com registo validado pela coordenação, a frequentar o {{ ano_minimo }}.º ano ou superior e com média geral não inferior a {{ media_minima|floatformat:"-2" }} valores.</div></div>
-    </div>
-    <div class="accordion-item">
-      <h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#p2" aria-expanded="false" aria-controls="p2">Que documentos são necessários?</button></h3>
-      <div id="p2" class="accordion-collapse collapse" data-bs-parent="#perguntas"><div class="accordion-body">Os documentos exigidos pelo INSTIC, como a declaração com as notas e o bilhete de identidade. A coordenação valida-os antes de o estudante poder candidatar-se.</div></div>
-    </div>
-    <div class="accordion-item">
-      <h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#p3" aria-expanded="false" aria-controls="p3">As empresas podem publicar vagas livremente?</button></h3>
-      <div id="p3" class="accordion-collapse collapse" data-bs-parent="#perguntas"><div class="accordion-body">Não. A empresa pede parceria ao INSTIC e as vagas só ficam visíveis para os estudantes depois de validadas pela coordenação.</div></div>
-    </div>
-    <div class="accordion-item">
-      <h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#p4" aria-expanded="false" aria-controls="p4">Como sei em que ponto está a minha candidatura?</button></h3>
-      <div id="p4" class="accordion-collapse collapse" data-bs-parent="#perguntas"><div class="accordion-body">A área de candidaturas mostra o estado de cada uma, e o centro de notificações avisa de cada mudança.</div></div>
-    </div>
-    <div class="accordion-item">
-      <h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#p5" aria-expanded="false" aria-controls="p5">Posso ter dois estágios ao mesmo tempo?</button></h3>
-      <div id="p5" class="accordion-collapse collapse" data-bs-parent="#perguntas"><div class="accordion-body">Não. Um estudante só pode ter um estágio activo de cada vez.</div></div>
-    </div>
-  </div>
-</section>
-
 {% endblock %}

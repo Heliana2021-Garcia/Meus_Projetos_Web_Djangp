@@ -1,0 +1,37 @@
+{% extends "layouts/publico.html" %}
+{% block titulo %}{{ titulo_pagina }}{% endblock %}
+{% block rodape %}{% endblock %}
+{% block conteudo %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8 col-xl-7">
+      <div class="card shadow-sm">
+        <div class="card-body p-4">
+          <h1 class="h4 sigest-titulo mb-1">{{ titulo_pagina }}</h1>
+          <p class="small text-secondary mb-3">{{ subtitulo_pagina }}</p>
+          <form method="post" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger py-2 small" role="alert">{{ form.non_field_errors.0 }}</div>
+            {% endif %}
+            <div class="row g-2">
+              <div class="col-12">{% include "components/campo_compacto.html" with campo=form.nome_empresa %}</div>
+              <div class="col-md-6">{% include "components/campo_compacto.html" with campo=form.nif %}</div>
+              <div class="col-md-6">{% include "components/campo_compacto.html" with campo=form.sector %}</div>
+              <div class="col-md-6">{% include "components/campo_compacto.html" with campo=form.telefone %}</div>
+              <div class="col-md-6">{% include "components/campo_compacto.html" with campo=form.email %}</div>
+              <div class="col-md-6">{% include "components/campo_compacto.html" with campo=form.first_name %}</div>
+              <div class="col-md-6">{% include "components/campo_compacto.html" with campo=form.last_name %}</div>
+              <div class="col-md-6">{% include "components/campo_compacto.html" with campo=form.password1 sem_ajuda=1 %}</div>
+              <div class="col-md-6">{% include "components/campo_compacto.html" with campo=form.password2 sem_ajuda=1 %}</div>
+            </div>
+            <div class="form-text small mb-3">A palavra-passe deve ter pelo menos 8 caracteres.</div>
+            <button type="submit" class="btn btn-primary w-100">Enviar pedido de parceria</button>
+          </form>
+          <p class="small text-center text-secondary mt-3 mb-0">Já tem conta? <a href="{% url 'contas:entrar' %}">Entrar</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

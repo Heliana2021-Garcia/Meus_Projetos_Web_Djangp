@@ -1,0 +1,102 @@
+{% extends "layouts/publico.html" %}
+{% block titulo %}{{ titulo_pagina }}{% endblock %}
+{% block rodape %}{% endblock %}
+{% block conteudo %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-md-9 col-lg-7 col-xl-6">
+      <div class="card shadow-sm">
+        <div class="card-body p-4">
+          <h1 class="h4 sigest-titulo mb-1">{{ titulo_pagina }}</h1>
+          <p class="small text-secondary mb-3">{{ subtitulo_pagina }}</p>
+          <div class="small text-secondary mb-1" id="rotulo-passo"></div>
+          <div class="progress mb-3" style="height: 6px;"><div class="progress-bar" id="barra-passo" role="progressbar" style="width: 33%;"></div></div>
+
+          <form method="post" enctype="multipart/form-data" novalidate id="formulario-registo">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger py-2 small" role="alert">{{ form.non_field_errors.0 }}</div>
+            {% endif %}
+
+            <div class="passo" data-titulo="Conta">
+              <div class="row g-2">
+                <div class="col-md-6">{% include "components/campo_compacto.html" with campo=form.first_name %}</div>
+                <div class="col-md-6">{% include "components/campo_compacto.html" with campo=form.last_name %}</div>
+                <div class="col-12">{% include "components/campo_compacto.html" with campo=form.email %}</div>
+                <div class="col-md-6">{% include "components/campo_compacto.html" with campo=form.password1 sem_ajuda=1 %}</div>
+                <div class="col-md-6">{% include "components/campo_compacto.html" with campo=form.password2 sem_ajuda=1 %}</div>
+              </div>
+              <div class="form-text small">A palavra-passe deve ter pelo menos 8 caracteres.</div>
+            </div>
+
+            <div class="passo d-none" data-titulo="Dados académicos">
+              <div class="row g-2">
+                <div class="col-md-6">{% include "components/campo_compacto.html" with campo=form.numero_estudante %}</div>
+                <div class="col-md-6">{% include "components/campo_compacto.html" with campo=form.curso %}</div>
+                <div class="col-md-6">{% include "components/campo_compacto.html" with campo=form.ano_frequencia %}</div>
+                <div class="col-md-6">{% include "components/campo_compacto.html" with campo=form.media_geral %}</div>
+              </div>
+            </div>
+
+            <div class="passo d-none" data-titulo="Documentos">
+              <div class="row g-2">
+                <div class="col-md-6">{% include "components/campo_compacto.html" with campo=form.declaracao_notas %}</div>
+                <div class="col-md-6">{% include "components/campo_compacto.html" with campo=form.bilhete_identidade %}</div>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-3">
+              <button type="button" class="btn btn-outline-secondary invisible" id="voltar">Voltar</button>
+              <button type="button" class="btn btn-primary" id="seguinte">Seguinte</button>
+              <button type="submit" class="btn btn-primary d-none" id="criar">Criar conta</button>
+            </div>
+          </form>
+          <p class="small text-center text-secondary mt-3 mb-0">Já tem conta? <a href="{% url 'contas:entrar' %}">Entrar</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  var form = document.getElementById('formulario-registo');
+  var passos = Array.prototype.slice.call(document.querySelectorAll('.passo'));
+  var rotulo = document.getElementById('rotulo-passo');
+  var barra = document.getElementById('barra-passo');
+  var voltar = document.getElementById('voltar');
+  var seguinte = document.getElementById('seguinte');
+  var criar = document.getElementById('criar');
+  var atual = 0;
+
+  function mostrar(i) {
+    atual = i;
+    passos.forEach(function (p, k) { p.classList.toggle('d-none', k !== i); });
+    rotulo.textContent = 'Passo ' + (i + 1) + ' de ' + passos.length + ' · ' + passos[i].getAttribute('data-titulo');
+    barra.style.width = ((i + 1) / passos.length * 100) + '%';
+    voltar.classList.toggle('invisible', i === 0);
+    seguinte.classList.toggle('d-none', i === passos.length - 1);
+    criar.classList.toggle('d-none', i !== passos.length - 1);
+  }
+  function valido(i) {
+    var campos = passos[i].querySelectorAll('input, select');
+    for (var k = 0; k < campos.length; k++) {
+      if (!campos[k].checkValidity()) { campos[k].reportValidity(); return false; }
+    }
+    return true;
+  }
+  seguinte.addEventListener('click', function () { if (valido(atual)) { mostrar(atual + 1); } });
+  voltar.addEventListener('click', function () { mostrar(atual - 1); });
+  form.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && atual < passos.length - 1) { e.preventDefault(); seguinte.click(); }
+  });
+
+  var inicio = 0;
+  for (var k = 0; k < passos.length; k++) {
+    if (passos[k].querySelector('.invalid-feedback')) { inicio = k; break; }
+  }
+  mostrar(inicio);
+})();
+</script>
+{% endblock %}

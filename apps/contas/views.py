@@ -49,6 +49,7 @@ class RegistoBaseView(FormView):
 
 class RegistoEstudanteView(RegistoBaseView):
     form_class = RegistoEstudanteForm
+    template_name = "contas/registo_estudante.html"
     mensagem_sucesso = "Conta criada. A coordenação vai validar o seu registo e os documentos antes de poder candidatar-se."
     extra_context = {
         "titulo_pagina": "Registo de estudante",
@@ -58,6 +59,7 @@ class RegistoEstudanteView(RegistoBaseView):
 
 class RegistoEmpresaView(RegistoBaseView):
     form_class = RegistoEmpresaForm
+    template_name = "contas/registo_empresa.html"
     mensagem_sucesso = "Pedido de parceria enviado ao INSTIC. Será avisado quando for aprovado."
     extra_context = {
         "titulo_pagina": "Pedido de parceria",

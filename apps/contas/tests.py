@@ -315,3 +315,40 @@ class EntrarVisualTests(TestCase):
         r = self.client.post("/entrar/", {"username": "", "password": ""})
         self.assertEqual(r.status_code, 200)
         self.assertContains(r, "is-invalid")
+
+class RegistoSimplificadoTests(TestCase):
+    def test_paginas_sem_nome_de_utilizador(self):
+        for url in ("/registo/estudante/", "/registo/empresa/"):
+            r = self.client.get(url)
+            self.assertEqual(r.status_code, 200)
+            self.assertContains(r, 'name="email"')
+            self.assertNotContains(r, 'name="username"')
+
+    def test_registo_do_estudante_em_passos(self):
+        r = self.client.get("/registo/estudante/")
+        for titulo in ("Conta", "Dados académicos", "Documentos"):
+            self.assertContains(r, 'data-titulo="%s"' % titulo)
+
+    def _dados_empresa(self, email="nova@empresa.ao", nif="5123456789"):
+        return {
+            "nome_empresa": "Nova Lda", "nif": nif, "sector": "Tecnologia", "telefone": "923000000",
+            "first_name": "Ana", "last_name": "Silva", "email": email,
+            "password1": "Teste#2026xyz", "password2": "Teste#2026xyz",
+        }
+
+    def test_empresa_regista_com_email_como_identificador(self):
+        from django.contrib.auth import get_user_model
+        from apps.empresas.models import Empresa
+        r = self.client.post("/registo/empresa/", self._dados_empresa())
+        self.assertEqual(r.status_code, 302)
+        u = get_user_model().objects.get(email="nova@empresa.ao")
+        self.assertEqual(u.username, "nova@empresa.ao")
+        self.assertTrue(Empresa.objects.filter(utilizador=u, nif="5123456789").exists())
+
+    def test_email_repetido_e_recusado(self):
+        from django.contrib.auth import get_user_model
+        self.client.post("/registo/empresa/", self._dados_empresa())
+        self.client.logout()
+        r = self.client.post("/registo/empresa/", self._dados_empresa(nif="5123456790"))
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(get_user_model().objects.filter(email__iexact="nova@empresa.ao").count(), 1)

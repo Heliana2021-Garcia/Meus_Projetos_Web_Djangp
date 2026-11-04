@@ -20,14 +20,14 @@
         </span>
       </a>
       <nav class="ms-auto d-flex align-items-center gap-2">
-        <a class="btn btn-link d-none d-lg-inline text-decoration-none" href="{% url 'contas:publica' %}#como-funciona">Como funciona</a>
-        <a class="btn btn-link d-none d-lg-inline text-decoration-none" href="{% url 'contas:publica' %}#faq">Perguntas frequentes</a>
-        {% if user.is_authenticated %}
+        
+        
+        {% block cabecalho_acoes %}{% if user.is_authenticated %}
         <a class="btn btn-primary" href="{% url 'contas:inicio' %}"><i class="bi bi-speedometer2 me-1"></i>Ir para o painel</a>
         {% else %}
         <a class="btn btn-primary" href="{% url 'contas:entrar' %}"><i class="bi bi-box-arrow-in-right me-1"></i>Entrar</a>
         {% endif %}
-      </nav>
+      {% endblock %}</nav>
     </div>
   </header>
 
@@ -45,12 +45,12 @@
     {% block conteudo %}{% endblock %}
   </main>
 
-  <footer class="sigest-footer-publico py-4">
+  {% block rodape %}<footer class="sigest-footer-publico py-4">
     <div class="container small d-flex flex-wrap justify-content-between gap-2">
       <span>© {% now "Y" %} Universidade de Luanda · Instituto de Tecnologias de Informação e Comunicação (INSTIC)</span>
       <span>SIGEST — Sistema de Gestão de Estágios e Inserção Profissional</span>
     </div>
-  </footer>
+  </footer>{% endblock %}
 
   <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
   {% block scripts %}{% endblock %}

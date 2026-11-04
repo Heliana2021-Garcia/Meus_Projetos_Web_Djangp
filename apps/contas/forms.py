@@ -50,16 +50,18 @@ class RegistoEstudanteForm(EstiloCamposMixin, UserCreationForm):
     field_order = [
         "first_name", "last_name", "numero_estudante", "curso", "ano_frequencia",
         "media_geral", "declaracao_notas", "bilhete_identidade",
-        "username", "email", "password1", "password2",
+        "email", "password1", "password2",
     ]
 
     class Meta(UserCreationForm.Meta):
         model = Utilizador
-        fields = ("first_name", "last_name", "username", "email")
+        fields = ("first_name", "last_name", "email")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["first_name"].required = True
+        self.fields["email"].required = True
+        self.fields["email"].label = "Email"
         self.fields["last_name"].required = True
         self.fields["first_name"].label = "Nome"
         self.fields["last_name"].label = "Apelido"
@@ -79,6 +81,7 @@ class RegistoEstudanteForm(EstiloCamposMixin, UserCreationForm):
     @transaction.atomic
     def save(self, commit=True):
         utilizador = super().save(commit=False)
+        utilizador.username = self.cleaned_data["email"].strip().lower()[:150]
         utilizador.tipo = Utilizador.Tipo.ESTUDANTE
         utilizador.save()
         perfil = PerfilEstudante.objects.create(
@@ -106,16 +109,18 @@ class RegistoEmpresaForm(EstiloCamposMixin, UserCreationForm):
 
     field_order = [
         "nome_empresa", "nif", "sector", "telefone", "first_name", "last_name",
-        "username", "email", "password1", "password2",
+        "email", "password1", "password2",
     ]
 
     class Meta(UserCreationForm.Meta):
         model = Utilizador
-        fields = ("first_name", "last_name", "username", "email")
+        fields = ("first_name", "last_name", "email")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["first_name"].required = True
+        self.fields["email"].required = True
+        self.fields["email"].label = "Email"
         self.fields["last_name"].required = True
         self.fields["first_name"].label = "Nome do responsável"
         self.fields["last_name"].label = "Apelido do responsável"
@@ -131,6 +136,7 @@ class RegistoEmpresaForm(EstiloCamposMixin, UserCreationForm):
     @transaction.atomic
     def save(self, commit=True):
         utilizador = super().save(commit=False)
+        utilizador.username = self.cleaned_data["email"].strip().lower()[:150]
         utilizador.tipo = Utilizador.Tipo.EMPRESA
         utilizador.save()
         Empresa.objects.create(

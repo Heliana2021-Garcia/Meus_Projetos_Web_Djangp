@@ -35,7 +35,7 @@
                 <button type="submit" class="btn btn-primary btn-sm">{% if vaga.estado == 'ENCERRADA' %}Reabrir{% else %}Submeter{% endif %}</button>
               </form>
               {% elif vaga.estado == 'ABERTA' %}
-              <form method="post" action="{% url 'vagas:encerrar' vaga.pk %}">{% csrf_token %}
+              <form method="post" action="{% url 'vagas:encerrar' vaga.pk %}" data-confirmar="A vaga deixa de receber candidaturas. Deseja encerr&aacute;-la?" data-confirmar-titulo="Encerrar vaga" data-confirmar-botao="Encerrar vaga">{% csrf_token %}
                 <button type="submit" class="btn btn-outline-danger btn-sm">Encerrar</button>
               </form>
               {% endif %}

@@ -40,7 +40,7 @@
             <li><span class="dropdown-item-text small text-secondary">{{ user.get_tipo_display }}</span></li>
             <li><hr class="dropdown-divider"></li>
             <li>
-              <form method="post" action="{% url 'contas:sair' %}">
+              <form method="post" action="{% url 'contas:sair' %}" data-confirmar="Tem a certeza de que pretende terminar a sess&atilde;o?" data-confirmar-titulo="Terminar sess&atilde;o" data-confirmar-botao="Terminar sess&atilde;o" data-confirmar-tipo="primario">
                 {% csrf_token %}
                 <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right me-2"></i>Sair</button>
               </form>
@@ -121,7 +121,23 @@
   </footer>
 
 {% endwith %}
-  <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <div class="modal fade" id="modal-confirmar" tabindex="-1" aria-labelledby="modal-confirmar-titulo" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title h5" id="modal-confirmar-titulo">Confirmar</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body"><p id="modal-confirmar-texto" class="mb-0"></p></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="modal-confirmar-ok">Confirmar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'js/confirmar.js' %}"></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

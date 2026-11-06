@@ -76,7 +76,7 @@
 
       <details>
         <summary class="btn btn-outline-danger btn-sm">Interromper estágio</summary>
-        <form method="post" action="{% url 'candidaturas:interromper' e.pk %}" class="mt-2" style="width: 20rem; max-width: 100%;">
+        <form method="post" action="{% url 'candidaturas:interromper' e.pk %}" data-confirmar="Esta ac&ccedil;&atilde;o interrompe o est&aacute;gio e liberta o estudante. O motivo ficar&aacute; registado. Deseja continuar?" data-confirmar-titulo="Interromper est&aacute;gio" data-confirmar-botao="Interromper est&aacute;gio" class="mt-2" style="width: 20rem; max-width: 100%;">
           {% csrf_token %}
           <textarea name="motivo" rows="3" required class="form-control mb-2" placeholder="Motivo da interrupção (obrigatório)"></textarea>
           <button type="submit" class="btn btn-danger w-100">Confirmar interrupção</button>

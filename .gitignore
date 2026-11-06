@@ -24,3 +24,5 @@ backups/
 db.sqlite3
 
 *.bak
+
+backup_*.json

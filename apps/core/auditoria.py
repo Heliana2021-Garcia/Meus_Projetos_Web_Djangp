@@ -13,13 +13,15 @@ ACCOES = {
     "candidaturas:confirmar_inicio": "Início do estágio confirmado",
     "candidaturas:interromper": "Estágio interrompido",
     "candidaturas:decidir": "Decisão sobre registo ou relatório do estágio",
-    "candidaturas:avaliar": "Avaliação do estágio registada",
-    "candidaturas:validar_conclusao": "Conclusão do estágio validada",
+    "candidaturas:avaliar_orientador": "Avaliação mensal do orientador enviada",
+    "candidaturas:validar_conclusao": "Conclusão do estágio aprovada",
     "candidaturas:efectivacao": "Efectivação registada",
 }
 # Pedidos que respondem 200 em caso de sucesso (JSON do Kanban)
 RESPOSTA_DIRECTA = {"candidaturas:mover"}
-CAMPOS_DETALHE = ("motivo", "comentario", "acao", "feedback", "resultado", "estado", "fase", "destino")
+# Avaliacao confidencial (so a empresa a ve): o historico regista o facto, nunca o conteudo
+SEM_DETALHE = {"candidaturas:avaliar_orientador"}
+CAMPOS_DETALHE = ("motivo", "comentario", "acao", "feedback", "resultado", "estado", "fase", "destino", "novo_estado", "orientador", "nota")
 
 
 def _rotulo(view_name):
@@ -60,8 +62,11 @@ def registar_pedido(request, response):
         return
 
     detalhe = "; ".join(
-        f"{campo}: {request.POST[campo][:200]}" for campo in CAMPOS_DETALHE if request.POST.get(campo)
+        f"{campo}: {request.POST[campo][:1000]}" for campo in CAMPOS_DETALHE
+        if request.POST.get(campo) and not (campo == "comentario" and resolvido.view_name == "candidaturas:avaliar")
     )
+    if resolvido.view_name in SEM_DETALHE:
+        detalhe = ""
     argumentos = ", ".join(f"{k}={v}" for k, v in resolvido.kwargs.items())
     RegistoDecisao.objects.create(
         utilizador=utilizador,

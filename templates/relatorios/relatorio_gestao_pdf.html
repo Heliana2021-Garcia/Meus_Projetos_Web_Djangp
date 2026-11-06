@@ -5,34 +5,45 @@
 <style>
   @page { size: A4 landscape; margin: 1.4cm; }
   body { font-family: Helvetica; font-size: 8.5pt; color: #222; }
-  h1 { font-size: 15pt; color: #0B2A5B; margin: 0; }
-  .sub { color: #555; font-size: 8.5pt; }
-  table.dados { width: 100%; border-collapse: collapse; margin-top: 8pt; }
-  table.dados th { background-color: #0B2A5B; color: #fff; padding: 4pt; text-align: left; }
-  table.dados td { padding: 3pt 4pt; border-bottom: 0.5pt solid #ccc; }
+  .inst { text-align: center; }
+  .inst .uni { font-size: 11pt; font-weight: bold; color: #0B2A5B; }
+  .inst .ins { font-size: 9pt; color: #333; }
+  h1 { font-size: 13pt; color: #0B2A5B; margin: 4pt 0 0 0; text-align: center; }
   .barra { border-top: 2pt solid #C5A059; margin: 6pt 0; }
+  table.meta { width: 100%; border-collapse: collapse; margin-top: 4pt; }
+  table.meta td { border: 0.5pt solid #999; padding: 3pt 5pt; }
+  table.meta td.k { background-color: #E8ECF3; font-weight: bold; width: 16%; }
+  table.dados { width: 100%; border-collapse: collapse; margin-top: 8pt; }
+  table.dados th { background-color: #0B2A5B; color: #fff; padding: 4pt; text-align: left; border: 0.5pt solid #0B2A5B; }
+  table.dados td { padding: 3pt 4pt; border: 0.5pt solid #bbb; }
+  .rodape { margin-top: 8pt; }
+  .rodape td { padding: 2pt 4pt; }
 </style>
 </head>
 <body>
 <table width="100%"><tr>
-  <td width="20%"><img src="{% static 'img/logo_instic.png' %}" height="42"></td>
-  <td>
-    <h1>Relatório de gestão: {{ rel.titulo }}</h1>
-    <div class="sub">SIGEST — Sistema de Gestão de Estágios e Inserção Profissional · INSTIC, Universidade de Luanda</div>
+  <td width="18%"><img src="{% static 'img/logo_instic.png' %}" height="42"></td>
+  <td class="inst">
+    <div class="uni">UNIVERSIDADE DE LUANDA</div>
+    <div class="ins">Instituto de Tecnologias de Informação e Comunicação (INSTIC)</div>
+    <h1>REGISTO DE DADOS — {{ rel.titulo|upper }}</h1>
   </td>
+  <td width="18%"></td>
 </tr></table>
 <div class="barra"></div>
-<p class="sub">
-  Gerado em {{ gerado_em|date:"d/m/Y H:i" }} por {{ utilizador.get_full_name|default:utilizador.email }}.
-  Total: <strong>{{ rel.total }}</strong>.
-  {% if rel.aplicados %}Filtros: {{ rel.aplicados|join:" · " }}.{% else %}Sem filtros aplicados.{% endif %}
-</p>
-{% if rel.resumo %}<p class="sub">{{ rel.resumo_titulo }}: {% for nome, n in rel.resumo %}{{ nome }} ({{ n }}){% if not forloop.last %}; {% endif %}{% endfor %}.</p>{% endif %}
+<table class="meta">
+  <tr><td class="k">Departamento</td><td>{{ meta.departamento }}</td><td class="k">Período</td><td>{{ meta.periodo }}</td></tr>
+  <tr><td class="k">Responsável</td><td>{{ meta.responsavel }}</td><td class="k">Versão</td><td>{{ meta.versao }}</td></tr>
+  <tr><td class="k">Data de Elaboração</td><td>{{ meta.data }}</td><td class="k">Filtros</td><td>{% if meta.filtros %}{{ meta.filtros|join:" | " }}{% else %}Sem filtros{% endif %}</td></tr>
+</table>
 <table class="dados" repeat="1">
-  <thead><tr>{% for c in rel.colunas %}<th>{{ c }}</th>{% endfor %}</tr></thead>
+  <thead><tr>{% for c in meta.colunas %}<th>{{ c }}</th>{% endfor %}</tr></thead>
   <tbody>
-  {% for linha in rel.linhas %}<tr>{% for c in linha %}<td>{{ c }}</td>{% endfor %}</tr>{% empty %}<tr><td colspan="{{ rel.colunas|length }}">Sem registos para os filtros escolhidos.</td></tr>{% endfor %}
+  {% for r in rel.registos %}<tr><td>{{ forloop.counter }}</td>{% for c in r %}<td>{{ c }}</td>{% endfor %}</tr>{% empty %}<tr><td colspan="6">Sem registos para os filtros escolhidos.</td></tr>{% endfor %}
   </tbody>
+</table>
+<table class="rodape">
+  <tr><td><strong>Total de Registos:</strong> {{ rel.total }}</td><td><strong>Data de Actualização:</strong> {{ meta.data }}</td></tr>
 </table>
 </body>
 </html>

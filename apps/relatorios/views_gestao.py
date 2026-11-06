@@ -45,14 +45,15 @@ class RelatorioGestaoView(LoginRequiredMixin, UserPassesTestMixin, TemplateView)
         formato = request.GET.get("formato")
 
         if formato == "csv":
-            resposta = HttpResponse(rg.para_csv(relatorio), content_type="text/csv; charset=utf-8")
+            resposta = HttpResponse(rg.para_csv(relatorio, request.user, agora), content_type="text/csv; charset=utf-8")
             resposta["Content-Disposition"] = (
                 f'attachment; filename="sigest_{chave}_{agora:%Y%m%d}.csv"')
             return resposta
 
         if formato == "pdf":
             html = render_to_string("relatorios/relatorio_gestao_pdf.html", {
-                "rel": relatorio, "gerado_em": agora, "utilizador": request.user})
+                "rel": relatorio, "gerado_em": agora, "utilizador": request.user,
+                "meta": rg.metadados(relatorio, request.user, agora)})
             buffer = BytesIO()
             resultado = pisa.CreatePDF(html, dest=buffer, encoding="utf-8", link_callback=_recurso)
             if resultado.err:

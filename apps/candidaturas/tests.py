@@ -389,7 +389,11 @@ class AcompanhamentoTests(TestCase):
         self.client.force_login(self.orientador.utilizador)
         self.client.post(decidir, {"acao": "validar"})
         r.refresh_from_db()
+        self.assertEqual(r.estado, "SUBMETIDO")  # validar exige nota
+        self.client.post(decidir, {"acao": "validar", "nota": "15"})
+        r.refresh_from_db()
         self.assertEqual(r.estado, "VALIDADO")
+        self.assertEqual(r.nota, Decimal("15.00"))
         self.assertEqual(r.validado_por, self.orientador.utilizador)
 
         self.client.force_login(self.aluno)
@@ -436,101 +440,45 @@ class AcompanhamentoTests(TestCase):
         self.assertEqual(self.client.get(url).status_code, 403)
 
 from . import servicos_avaliacao  # noqa: E402
-from .models import Avaliacao  # noqa: E402
+from .models import AvaliacaoMensal  # noqa: E402
 
 
-class AvaliacaoTests(TestCase):
-    setUp = AcompanhamentoTests.setUp
-    _orientador = AcompanhamentoTests._orientador
-    _iniciar = AcompanhamentoTests._iniciar
+class PreparacaoConclusao:
+    """Auxiliares (nao e um teste): estagio pronto a ser concluido pela empresa."""
 
     def _coordenador(self):
         return self.User.objects.create_user("coord", "coord@t.ao", "x", tipo="COORDENADOR")
 
-    def _avaliar(self, papel, valor, comentario=""):
-        v = Decimal(str(valor))
-        return Avaliacao.objects.create(
-            candidatura=self.c, papel=papel, objectivos=v, qualidade=v, responsabilidade=v,
-            assiduidade=v, competencias=v, comentario=comentario,
+    def _definir_inicio(self, dias_atras, meses=3, fim=None):
+        inicio = self.hoje - timedelta(days=dias_atras)
+        Vaga.objects.filter(pk=self.vaga.pk).update(duracao_meses=meses)
+        Candidatura.objects.filter(pk=self.c.pk).update(
+            data_inicio=inicio, data_fim=fim or inicio + timedelta(days=30 * meses),
         )
+        self.vaga.refresh_from_db()
+        self.c.refresh_from_db()
 
-    def _quatro(self, comentario_empresa=""):
-        self._avaliar("EMPRESA", 16, comentario_empresa)
-        self._avaliar("ORIENTADOR", 14)
-        self._avaliar("ESTUDANTE", 18)
-        self._avaliar("COORDENADOR", 12)
+    def _mensais(self, quantas):
+        for mes in range(1, quantas + 1):
+            AvaliacaoMensal.objects.create(
+                candidatura=self.c, mes=mes, orientador=self.orientador,
+                nota=Decimal("15"), comentario="ok",
+            )
 
     def _preparar_conclusao(self):
         self._iniciar()
-        RegistoDiario.objects.create(
-            candidatura=self.c, data=self.hoje, descricao="x", estado="VALIDADO"
-        )
+        self._definir_inicio(100, meses=3, fim=self.hoje - timedelta(days=1))
+        for dias, nota in ((2, "16"), (3, "14"), (4, "13")):
+            RegistoDiario.objects.create(
+                candidatura=self.c, data=self.hoje - timedelta(days=dias),
+                descricao="x", estado="VALIDADO", nota=Decimal(nota),
+            )
         RelatorioEstagio.objects.create(
             candidatura=self.c, tipo="FINAL", titulo="Final", conteudo="x", estado="VALIDADO"
         )
-        self._quatro()
+        self._mensais(3)
 
-    def test_nota_final_e_media_pesada(self):
-        self._iniciar()
-        self._avaliar("EMPRESA", 16)
-        self.assertIsNone(servicos_avaliacao.nota_final(self.c))  # faltam avaliacoes
-        self._avaliar("ORIENTADOR", 14)
-        self._avaliar("ESTUDANTE", 18)
-        self._avaliar("COORDENADOR", 12)
-        # (16*30 + 14*30 + 18*10 + 12*30) / 100
-        self.assertEqual(servicos_avaliacao.nota_final(self.c), Decimal("14.40"))
 
-    def test_conclusao_bloqueada_enquanto_faltam_condicoes(self):
-        self._iniciar()
-        self.assertTrue(servicos_avaliacao.impedimentos_conclusao(self.c))
-        self.client.force_login(self._coordenador())
-        self.client.post(reverse("candidaturas:validar_conclusao", args=[self.c.pk]))
-        self.c.refresh_from_db()
-        self.assertIsNone(self.c.concluida_em)
-
-    def test_conclusao_calcula_nota_e_liberta_o_estudante(self):
-        self._preparar_conclusao()
-        self.assertEqual(servicos_avaliacao.impedimentos_conclusao(self.c), [])
-        self.client.force_login(self._coordenador())
-        self.client.post(reverse("candidaturas:validar_conclusao", args=[self.c.pk]))
-        self.c.refresh_from_db()
-        self.c.estudante.refresh_from_db()
-        self.assertIsNotNone(self.c.concluida_em)
-        self.assertAlmostEqual(float(self.c.avaliacao_final), 14.4, places=1)
-        self.assertEqual(self.c.estudante.estado, PerfilEstudante.Estado.DISPONIVEL)
-        self.assertEqual(self.c.estagio_estado, "CONCLUIDO")
-
-    def test_permissoes_da_avaliacao(self):
-        self._preparar_conclusao()
-        self.client.force_login(self.outro.utilizador)
-        self.assertEqual(self.client.get(reverse("candidaturas:avaliacao", args=[self.c.pk])).status_code, 404)
-        self.client.force_login(self.aluno)
-        resposta = self.client.post(reverse("candidaturas:validar_conclusao", args=[self.c.pk]))
-        self.assertEqual(resposta.status_code, 403)
-        self.c.refresh_from_db()
-        self.assertIsNone(self.c.concluida_em)
-
-    def test_estudante_so_ve_a_sua_avaliacao_ate_ao_fim(self):
-        self._iniciar()
-        self._quatro(comentario_empresa="SEGREDO-EMPRESA")
-        url = reverse("candidaturas:avaliacao", args=[self.c.pk])
-        self.client.force_login(self.aluno)
-        self.assertNotContains(self.client.get(url), "SEGREDO-EMPRESA")
-        self.c.concluida_em = timezone.now()
-        self.c.save()
-        self.assertContains(self.client.get(url), "SEGREDO-EMPRESA")
-
-    def test_avaliar_pela_vista_valida_intervalo_e_papel(self):
-        self._iniciar()
-        url = reverse("candidaturas:avaliar", args=[self.c.pk])
-        dados = {nome: "15" for nome, _ in Avaliacao.CRITERIOS}
-        self.client.force_login(self.orientador.utilizador)
-        self.client.post(url, {**dados, "qualidade": "25"})
-        self.assertEqual(Avaliacao.objects.count(), 0)  # fora de 0-20
-        self.client.post(url, dados)
-        avaliacao = Avaliacao.objects.get()
-        self.assertEqual(avaliacao.papel, "ORIENTADOR")
-        self.assertEqual(avaliacao.nota, Decimal("15.00"))
 from apps.relatorios import filtros_estagios  # noqa: E402
 
 
@@ -602,114 +550,42 @@ class AuditoriaEEfectivacaoTests(TestCase):
     setUp = AcompanhamentoTests.setUp
     _orientador = AcompanhamentoTests._orientador
     _iniciar = AcompanhamentoTests._iniciar
-    _avaliar = AvaliacaoTests._avaliar
-    _quatro = AvaliacaoTests._quatro
-    _preparar_conclusao = AvaliacaoTests._preparar_conclusao
+    _coordenador = PreparacaoConclusao._coordenador
+    _definir_inicio = PreparacaoConclusao._definir_inicio
+    _mensais = PreparacaoConclusao._mensais
+    _preparar_conclusao = PreparacaoConclusao._preparar_conclusao
 
-    def _coordenador(self):
-        return self.User.objects.create_user("coord", "coord@t.ao", "x", tipo="COORDENADOR")
-
-    def test_decisao_bem_sucedida_fica_registada(self):
+    def test_conclusao_pela_empresa_fica_registada(self):
         self._preparar_conclusao()
-        coord = self._coordenador()
-        self.client.force_login(coord)
+        self.client.force_login(self.dono)
         self.client.post(reverse("candidaturas:validar_conclusao", args=[self.c.pk]))
         registo = RegistoDecisao.objects.get()
-        self.assertEqual(registo.utilizador, coord)
-        self.assertEqual(registo.accao, "Conclusão do estágio validada")
+        self.assertEqual(registo.utilizador, self.dono)
+        self.assertEqual(registo.accao, "Conclusão do estágio aprovada")
+        self.client.force_login(self._coordenador())
         pagina = self.client.get(reverse("relatorios:decisoes"))
-        self.assertContains(pagina, "Conclusão do estágio validada")
+        self.assertContains(pagina, "Conclusão do estágio aprovada")
 
     def test_pedido_recusado_nao_fica_registado(self):
-        self._iniciar()  # faltam avaliacoes e relatorio final: a conclusao e recusada
-        self.client.force_login(self._coordenador())
+        self._iniciar()  # faltam registos, relatorio e avaliacoes: a conclusao e recusada
+        self.client.force_login(self.dono)
         self.client.post(reverse("candidaturas:validar_conclusao", args=[self.c.pk]))
         self.assertEqual(RegistoDecisao.objects.count(), 0)
 
-    def test_efectivacao_so_apos_conclusao_e_so_uma_vez(self):
-        url = reverse("candidaturas:efectivacao", args=[self.c.pk])
-        self._preparar_conclusao()
-        self.client.force_login(self.dono)
-        self.client.post(url, {"resultado": "sim"})
-        self.c.refresh_from_db()
-        self.assertIsNone(self.c.efectivado)  # ainda nao concluido
-
-        servicos_avaliacao.concluir(self.c, self._coordenador())
-        self.client.post(url, {"resultado": "sim"})
-        self.c.refresh_from_db()
-        self.assertIs(self.c.efectivado, True)
-        self.client.post(url, {"resultado": "nao"})
-        self.c.refresh_from_db()
-        self.assertIs(self.c.efectivado, True)  # nao se altera
-
+    def test_avaliacao_mensal_fica_registada_sem_o_conteudo(self):
+        self._iniciar()
+        self._definir_inicio(31)
         self.client.force_login(self.aluno)
-        self.assertEqual(self.client.post(url, {"resultado": "nao"}).status_code, 403)
-
-    def test_paginas_protegidas_por_perfil(self):
-        T = Utilizador.Tipo
-        gestao = {T.ADMINISTRADOR, T.COORDENADOR}
-        regras = [
-            ("estudantes:painel", {T.ESTUDANTE}),
-            ("estudantes:documentos", {T.ESTUDANTE}),
-            ("candidaturas:minhas", {T.ESTUDANTE}),
-            ("candidaturas:estagio", {T.ESTUDANTE}),
-            ("candidaturas:diario", {T.ESTUDANTE}),
-            ("candidaturas:relatorios", {T.ESTUDANTE}),
-            ("empresas:painel", {T.EMPRESA}),
-            ("empresas:orientadores", {T.EMPRESA}),
-            ("candidaturas:estagios", {T.EMPRESA}),
-            ("empresas:painel_orientador", {T.ORIENTADOR}),
-            ("relatorios:painel", gestao),
-            ("relatorios:estudantes_pendentes", gestao),
-            ("relatorios:vagas_analise", gestao),
-            ("relatorios:estagios", gestao),
-            ("relatorios:relatorio_estagios", gestao),
-            ("relatorios:decisoes", gestao),
-        ]
-        utilizadores = {
-            tipo: self.User.objects.create_user(f"t_{tipo}", f"{tipo}@t.ao", "x", tipo=tipo)
-            for tipo, _ in T.choices
-        }
-        for nome, permitidos in regras:
-            url = reverse(nome)
-            self.client.logout()
-            self.assertEqual(self.client.get(url).status_code, 302, f"{nome} sem sessao")
-            for tipo, utilizador in utilizadores.items():
-                if tipo in permitidos:
-                    continue
-                self.client.force_login(utilizador)
-                self.assertIn(self.client.get(url).status_code, (403, 404), f"{nome} / {tipo}")
-from apps.contas.models import Utilizador  # noqa: E402
-from apps.core.models import RegistoDecisao  # noqa: E402
-
-
-class AuditoriaEEfectivacaoTests(TestCase):
-    setUp = AcompanhamentoTests.setUp
-    _orientador = AcompanhamentoTests._orientador
-    _iniciar = AcompanhamentoTests._iniciar
-    _avaliar = AvaliacaoTests._avaliar
-    _quatro = AvaliacaoTests._quatro
-    _preparar_conclusao = AvaliacaoTests._preparar_conclusao
-
-    def _coordenador(self):
-        return self.User.objects.create_user("coord", "coord@t.ao", "x", tipo="COORDENADOR")
-
-    def test_decisao_bem_sucedida_fica_registada(self):
-        self._preparar_conclusao()
-        coord = self._coordenador()
-        self.client.force_login(coord)
-        self.client.post(reverse("candidaturas:validar_conclusao", args=[self.c.pk]))
+        self.client.post(
+            reverse("candidaturas:avaliar_orientador"),
+            {"nota": "12", "comentario": "SEGREDO-ALUNO"},
+        )
         registo = RegistoDecisao.objects.get()
-        self.assertEqual(registo.utilizador, coord)
-        self.assertEqual(registo.accao, "Conclusão do estágio validada")
-        pagina = self.client.get(reverse("relatorios:decisoes"))
-        self.assertContains(pagina, "Conclusão do estágio validada")
-
-    def test_pedido_recusado_nao_fica_registado(self):
-        self._iniciar()  # faltam avaliacoes e relatorio final: a conclusao e recusada
+        self.assertEqual(registo.accao, "Avaliação mensal do orientador enviada")
+        self.assertEqual(registo.detalhe, "")
         self.client.force_login(self._coordenador())
-        self.client.post(reverse("candidaturas:validar_conclusao", args=[self.c.pk]))
-        self.assertEqual(RegistoDecisao.objects.count(), 0)
+        pagina = self.client.get(reverse("relatorios:decisoes"))
+        self.assertNotContains(pagina, "SEGREDO-ALUNO")
 
     def test_efectivacao_so_apos_conclusao_e_so_uma_vez(self):
         url = reverse("candidaturas:efectivacao", args=[self.c.pk])
@@ -719,7 +595,7 @@ class AuditoriaEEfectivacaoTests(TestCase):
         self.c.refresh_from_db()
         self.assertIsNone(self.c.efectivado)  # ainda nao concluido
 
-        servicos_avaliacao.concluir(self.c, self._coordenador())
+        servicos_avaliacao.concluir(self.c, self.dono)
         self.client.post(url, {"resultado": "sim"})
         self.c.refresh_from_db()
         self.assertIs(self.c.efectivado, True)

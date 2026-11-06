@@ -26,7 +26,7 @@ urlpatterns = [
     # avaliação e conclusão
     path("estagio/avaliacao/", views_avaliacao.MinhaAvaliacaoView.as_view(), name="minha_avaliacao"),
     path("<int:pk>/avaliacao/", views_avaliacao.AvaliacaoEstagioView.as_view(), name="avaliacao"),
-    path("<int:pk>/avaliar/", views_avaliacao.AvaliarView.as_view(), name="avaliar"),
+    path("estagio/avaliar-orientador/", views_avaliacao.AvaliarOrientadorView.as_view(), name="avaliar_orientador"),
     path("<int:pk>/validar-conclusao/", views_avaliacao.ValidarConclusaoView.as_view(), name="validar_conclusao"),
     path("<int:pk>/certificado/", views_certificado.CertificadoView.as_view(), name="certificado"),
     path("acompanhamento/<str:tipo>/<int:pk>/decidir/", views_estagio.DecidirView.as_view(), name="decidir"),

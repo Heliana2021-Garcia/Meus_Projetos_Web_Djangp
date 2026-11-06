@@ -216,12 +216,14 @@ def gerar(chave, dados):
     objectos = list(qs.distinct().order_by(*ent["ordem"]))
     extra = ent["preparar"]() if "preparar" in ent else {}
     linhas = [[_texto(coluna(o, extra)) for _, coluna in ent["colunas"]] for o in objectos]
+    registos = [[_texto(c) for c in REGISTO[chave](o)] for o in objectos]
     contagem = Counter(ent["agrupar"](o, extra) for o in objectos)
     return {
         "titulo": ent["titulo"],
         "colunas": [rotulo for rotulo, _ in ent["colunas"]],
         "linhas": linhas,
         "total": len(linhas),
+        "registos": registos,
         "resumo_titulo": ent["resumo_titulo"],
         "resumo": sorted(contagem.items(), key=lambda p: (-p[1], p[0])),
         "filtros": filtros,
@@ -231,15 +233,94 @@ def gerar(chave, dados):
     }
 
 
+def _contacto_estudante(o):
+    return getattr(o, "telefone", "") or getattr(o.utilizador, "telefone", "") or ""
+
+
+# Colunas do modelo: Nome Completo | Curso / Área | Contacto | E-mail | Observações
+REGISTO = {
+    "estudantes": lambda o: (
+        _nome(o.utilizador), _curso(o), _contacto_estudante(o), o.utilizador.email,
+        f"N.º {o.numero_estudante} | {o.ano_frequencia}.º ano | Média {o.media_geral} | "
+        f"{_rotulo(o, 'registo_estado')}"),
+    "empresas": lambda o: (
+        o.nome, o.sector, o.telefone, o.utilizador.email,
+        f"NIF {o.nif} | {_rotulo(o, 'tipo')} | NIF {'validado' if o.nif_validado else 'por validar'}"),
+    "vagas": lambda o: (
+        o.titulo, _rotulo(o, "area"), getattr(o.empresa, "telefone", ""),
+        o.empresa.utilizador.email,
+        f"{o.empresa.nome} | {_rotulo(o, 'tipo_estagio')} | {_rotulo(o, 'modalidade')} | "
+        f"{o.numero_vagas} vaga(s) | Limite {_data(o.data_limite)} | {_rotulo(o, 'estado')}"),
+    "candidaturas": lambda o: (
+        _nome(o.estudante.utilizador), _curso(o.estudante), _contacto_estudante(o.estudante),
+        o.estudante.utilizador.email,
+        f"{o.vaga.titulo} | {o.vaga.empresa.nome} | {_rotulo(o, 'estado')} | "
+        f"Submetida em {_data(o.criado_em)}"),
+}
+
+DEPARTAMENTO = "Coordenação de Estágios"
+VERSAO = "1.0"
+COLUNAS_MODELO = ["N.º", "Nome Completo", "Curso / Área", "Contacto", "E-mail", "Observações"]
+
+
 def _celula_segura(texto):
     # Evita que o Excel interprete uma célula como fórmula.
+    texto = _texto(texto)
     return "'" + texto if texto[:1] in ("=", "+", "-", "@") else texto
 
 
-def para_csv(relatorio):
+def para_csv(relatorio, responsavel="", agora=None):
+    """CSV no modelo institucional 'REGISTO DE DADOS'."""
+    agora = agora or timezone.localtime()
+    hoje = agora.strftime("%d/%m/%Y")
+    if relatorio["de"] or relatorio["ate"]:
+        de = _data(_data_valida(relatorio["de"])) if relatorio["de"] else "início"
+        ate = _data(_data_valida(relatorio["ate"])) if relatorio["ate"] else "hoje"
+        periodo = f"{de} a {ate}"
+    else:
+        periodo = "Todos os registos"
+    nome_resp = (responsavel.get_full_name() or responsavel.email) if responsavel else ""
+    outros = [a for a in relatorio["aplicados"] if not a.startswith(("De:", "Até:"))]
+
     saida = StringIO()
-    escritor = csv.writer(saida, delimiter=";")
-    escritor.writerow(relatorio["colunas"])
-    for linha in relatorio["linhas"]:
-        escritor.writerow([_celula_segura(c) for c in linha])
+    e = csv.writer(saida, delimiter=";")
+    linha = lambda *c: e.writerow([_celula_segura(x) for x in c])
+    linha("UNIVERSIDADE DE LUANDA")
+    linha("Instituto de Tecnologias de Informação e Comunicação (INSTIC)")
+    linha(f"REGISTO DE DADOS - {relatorio['titulo'].upper()}")
+    linha()
+    linha("Departamento", DEPARTAMENTO)
+    linha("Período", periodo)
+    linha("Responsável", nome_resp)
+    linha("Versão", VERSAO)
+    linha("Data de Elaboração", hoje)
+    if outros:
+        linha("Filtros aplicados", " | ".join(outros))
+    linha()
+    linha(*COLUNAS_MODELO)
+    for n, registo in enumerate(relatorio["registos"], start=1):
+        linha(n, *registo)
+    linha()
+    linha("Total de Registos", relatorio["total"])
+    linha("Data de Actualização", hoje)
     return "\ufeff" + saida.getvalue()
+
+
+def metadados(relatorio, responsavel=None, agora=None):
+    """Dados do cabeçalho/rodapé do modelo 'REGISTO DE DADOS'."""
+    agora = agora or timezone.localtime()
+    if relatorio["de"] or relatorio["ate"]:
+        de = _data(_data_valida(relatorio["de"])) if relatorio["de"] else "início"
+        ate = _data(_data_valida(relatorio["ate"])) if relatorio["ate"] else "hoje"
+        periodo = f"{de} a {ate}"
+    else:
+        periodo = "Todos os registos"
+    return {
+        "departamento": DEPARTAMENTO,
+        "periodo": periodo,
+        "responsavel": (responsavel.get_full_name() or responsavel.email) if responsavel else "",
+        "versao": VERSAO,
+        "data": agora.strftime("%d/%m/%Y"),
+        "colunas": COLUNAS_MODELO,
+        "filtros": [a for a in relatorio["aplicados"] if not a.startswith(("De:", "Até:"))],
+    }

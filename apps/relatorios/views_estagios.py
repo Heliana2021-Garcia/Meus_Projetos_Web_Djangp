@@ -10,6 +10,7 @@ from apps.contas.models import Utilizador
 from apps.core.pdf_utils import html_para_pdf
 
 from . import filtros_estagios as filtros
+from . import modelo_registo as modelo
 
 GESTAO = (Utilizador.Tipo.ADMINISTRADOR, Utilizador.Tipo.COORDENADOR)
 
@@ -41,37 +42,45 @@ class RelatorioEstagiosView(TipoRequeridoMixin, TemplateView):
         return contexto
 
 
+def _registos(linhas):
+    estados = dict(filtros.ESTADOS)
+    registos = []
+    for c in linhas:
+        e = c.estudante
+        registos.append((
+            e.utilizador.get_full_name() or e.utilizador.username,
+            e.curso.sigla,
+            modelo.telefone(e),
+            e.utilizador.email,
+            modelo.observacoes(
+                "N.º " + str(e.numero_estudante),
+                c.vaga.empresa.nome,
+                c.vaga.titulo,
+                c.vaga.get_tipo_estagio_display(),
+                ("Orientador: " + c.orientador.utilizador.get_full_name()) if c.orientador_id else "",
+                estados[c.estagio_estado],
+                ("Início " + _data(c.data_inicio)) if c.data_inicio else "",
+                ("Conclusão prevista " + _data(c.data_fim)) if c.data_fim else "",
+                ("Concluído em " + _data(c.concluida_em)) if c.concluida_em else "",
+                ("Nota final " + str(c.avaliacao_final)) if c.estagio_estado == "CONCLUIDO" and c.avaliacao_final is not None else "",
+            ),
+        ))
+    return registos
+
+
 class ExportarEstagiosCsvView(TipoRequeridoMixin, View):
     tipos_permitidos = GESTAO
     http_method_names = ["get"]
 
     def get(self, request):
-        estados = dict(filtros.ESTADOS)
-        resposta = HttpResponse(content_type="text/csv; charset=utf-8")
+        registos = _registos(filtros.filtrar(request.GET))
+        conteudo = modelo.csv_registo(
+            "Estágios", registos, request.user,
+            filtros=filtros.descrever(request.GET) or ())
+        resposta = HttpResponse(conteudo, content_type="text/csv; charset=utf-8")
         resposta["Content-Disposition"] = (
             f'attachment; filename="relatorio_estagios_{timezone.localdate():%Y%m%d}.csv"'
         )
-        resposta.write("\ufeff")
-        saida = csv.writer(resposta, delimiter=";")
-        saida.writerow([
-            "Número", "Estudante", "Curso", "Empresa", "Vaga", "Modalidade", "Orientador",
-            "Estado", "Início", "Conclusão prevista", "Concluído em", "Nota final",
-        ])
-        for c in filtros.filtrar(request.GET):
-            saida.writerow([
-                c.estudante.numero_estudante,
-                c.estudante.utilizador.get_full_name() or c.estudante.utilizador.username,
-                c.estudante.curso.sigla,
-                c.vaga.empresa.nome,
-                c.vaga.titulo,
-                c.vaga.get_tipo_estagio_display(),
-                c.orientador.utilizador.get_full_name() if c.orientador_id else "",
-                estados[c.estagio_estado],
-                _data(c.data_inicio),
-                _data(c.data_fim),
-                _data(c.concluida_em),
-                c.avaliacao_final if c.estagio_estado == "CONCLUIDO" else "",
-            ])
         return resposta
 
 
@@ -80,16 +89,13 @@ class ExportarEstagiosPdfView(TipoRequeridoMixin, View):
     http_method_names = ["get"]
 
     def get(self, request):
-        linhas = list(filtros.filtrar(request.GET))
-        contagem, media = filtros.totais(linhas)
+        registos = _registos(filtros.filtrar(request.GET))
+        descricao = filtros.descrever(request.GET) or ()
+        if isinstance(descricao, str):
+            descricao = [descricao]
         pdf = html_para_pdf("relatorios/relatorio_estagios_pdf.html", {
-            "linhas": linhas,
-            "total": len(linhas),
-            "contagem": contagem,
-            "media": media,
-            "filtros_aplicados": filtros.descrever(request.GET),
-            "gerado_em": timezone.localtime(),
-            "gerado_por": request.user.get_full_name() or request.user.username,
+            "rel": {"titulo": "Estágios", "registos": registos, "total": len(registos)},
+            "meta": modelo.metadados(request.user, filtros=descricao),
         })
         resposta = HttpResponse(pdf, content_type="application/pdf")
         resposta["Content-Disposition"] = (

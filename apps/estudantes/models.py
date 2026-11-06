@@ -87,18 +87,18 @@ class PerfilEstudante(ModeloBase):
 
     @property
     def motivos_inelegibilidade(self):
-        motivos = []
-        if self.registo_estado != self.Registo.APROVADO:
-            motivos.append("O seu registo ainda não foi validado pela coordenação.")
-        if self.ano_frequencia < self.ANO_MINIMO_CANDIDATURA:
-            motivos.append(
+        motivos = []                                #1
+        if self.registo_estado != self.Registo.APROVADO: #2
+            motivos.append("O seu registo ainda não foi validado pela coordenação.") #3
+        if self.ano_frequencia < self.ANO_MINIMO_CANDIDATURA:  #4
+            motivos.append(                                     #5
                 f"É necessário frequentar o {self.ANO_MINIMO_CANDIDATURA}º ano ou superior."
             )
-        if self.media_geral < self.MEDIA_MINIMA_CANDIDATURA:
-            motivos.append(
+        if self.media_geral < self.MEDIA_MINIMA_CANDIDATURA:  #6
+            motivos.append(                             #7
                 f"A média geral tem de ser pelo menos {self.MEDIA_MINIMA_CANDIDATURA} valores."
             )
-        return motivos
+        return motivos   #8
 
     @property
     def elegivel(self):
@@ -112,7 +112,7 @@ class PerfilEstudante(ModeloBase):
         self.estado = self.Estado.DISPONIVEL
         self.save(update_fields=["estado", "atualizado_em"])
 
-    TIPOS_OBRIGATORIOS = ("DECLARACAO", "BI")
+    TIPOS_OBRIGATORIOS = ("DECLARACAO", "FREQUENCIA")
 
     @property
     def tem_documentos_obrigatorios(self):
@@ -132,7 +132,7 @@ class PerfilEstudante(ModeloBase):
     def aprovar_registo(self, utilizador):
         if not self.tem_documentos_obrigatorios:
             raise ValidationError(
-                "Faltam documentos obrigatórios (declaração com notas e bilhete de identidade)."
+                "Faltam documentos obrigatórios (declaração com notas e declaração de frequência)."
             )
         self.registo_estado = self.Registo.APROVADO
         self.registo_motivo = ""
@@ -174,7 +174,7 @@ def caminho_documento(instancia, nome):
 class DocumentoEstudante(ModeloBase):
     class Tipo(models.TextChoices):
         DECLARACAO = "DECLARACAO", "Declaração com notas"
-        BI = "BI", "Bilhete de identidade"
+        FREQUENCIA = "FREQUENCIA", "Declaração de frequência"
 
     estudante = models.ForeignKey(
         PerfilEstudante, on_delete=models.CASCADE, related_name="documentos",

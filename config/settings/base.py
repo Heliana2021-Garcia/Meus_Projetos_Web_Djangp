@@ -115,12 +115,6 @@ MAX_ESTAGIOS_POR_ORIENTADOR = 3
 
 
 # Pesos da avaliação final (percentagens; a nota final é a média pesada)
-PESOS_AVALIACAO = {
-    "EMPRESA": 30,
-    "ORIENTADOR": 30,
-    "ESTUDANTE": 10,
-    "COORDENADOR": 30,
-}
 
 # Entrada no sistema com email e palavra-passe (não com nome de utilizador)
 AUTHENTICATION_BACKENDS = ["apps.contas.backends.EmailBackend"]

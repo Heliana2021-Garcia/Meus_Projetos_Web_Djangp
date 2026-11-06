@@ -1,7 +1,7 @@
 {% extends "layouts/base.html" %}
 {% block titulo %}Avaliação do estágio{% endblock %}
 {% block conteudo %}
-{% include "components/cabecalho_pagina.html" with titulo="Avaliação do estágio" descricao="Quatro avaliações com pesos definidos; a nota final é calculada automaticamente." %}
+{% include "components/cabecalho_pagina.html" with titulo="Avaliação do estágio" descricao="A nota do estagiário é a média das notas que o orientador atribui aos registos do diário." %}
 <div class="sigest-medio">
   <div class="card mb-4"><div class="card-body">
     <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
@@ -11,34 +11,66 @@
       </div>
       {% include "components/estado_estagio.html" with c=c %}
     </div>
-    {% if nota_final %}
+    {% if nota_final is not None %}
     <p class="display-6 text-primary mt-3 mb-0">{{ nota_final }} <small class="fs-6 text-secondary">/ 20 · nota final</small></p>
-    {% elif nota_provisoria %}
-    <p class="mt-3 mb-0">Nota final prevista: <strong>{{ nota_provisoria }}</strong> / 20 <span class="text-secondary small">(só fica definitiva com a validação da coordenação)</span></p>
+    {% elif nota_provisoria is not None %}
+    <p class="mt-3 mb-0">Nota actual: <strong>{{ nota_provisoria }}</strong> / 20 <span class="text-secondary small">(média dos registos já avaliados; só fica definitiva quando a empresa aprovar a conclusão)</span></p>
     {% endif %}
   </div></div>
 
+  <h2 class="h6">Notas do diário de actividades</h2>
   <div class="card mb-4">
     <div class="table-responsive">
       <table class="table align-middle mb-0">
-        <thead><tr><th>Avaliador</th><th>Peso</th><th>Nota</th><th>Comentário</th></tr></thead>
+        <thead><tr><th>Data</th><th>Estado</th><th>Nota</th><th>Comentário do orientador</th></tr></thead>
         <tbody>
-          {% for l in linhas %}
+          {% for r in registos %}
           <tr>
-            <td>{{ l.rotulo }}{% if l.minha %} <span class="badge text-bg-light">você</span>{% endif %}</td>
-            <td>{{ l.peso }}%</td>
+            <td class="text-nowrap">{{ r.data|date:"d/m/Y" }}</td>
+            <td>{% include "components/estado_validacao.html" with item=r %}</td>
+            <td>{% if r.nota is not None %}<strong>{{ r.nota }}</strong>{% else %}&mdash;{% endif %}</td>
+            <td class="small">{{ r.comentario_orientador|default:"" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="text-center text-secondary py-4">Ainda não há registos no diário.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if mostrar_mensais %}
+  <h2 class="h6">Avaliação mensal do orientador</h2>
+  <p class="small text-secondary">
+    {% if papel == 'ESTUDANTE' %}Avalie o seu orientador de 30 em 30 dias. A avaliação é enviada à empresa; o orientador não a vê e ela não conta para a sua nota.
+    {% else %}Avaliações do orientador enviadas pelo estagiário. Só a empresa as vê e não contam para a nota do estagiário.{% endif %}
+  </p>
+  <div class="card mb-3">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead><tr><th>Mês</th><th>Disponível desde</th><th>Estado</th><th>Nota</th><th>Comentário</th></tr></thead>
+        <tbody>
+          {% for m in mensais %}
+          <tr>
+            <td>{{ m.mes }}</td>
+            <td class="text-nowrap">{{ m.abre_em|date:"d/m/Y" }}</td>
             <td>
-              {% if l.avaliacao %}<strong>{{ l.avaliacao.nota }}</strong>
-              {% elif l.reservada %}<span class="text-secondary small">Disponível no fim do estágio</span>
-              {% else %}<span class="badge text-bg-warning">Pendente</span>{% endif %}
+              {% if m.avaliacao %}<span class="badge text-bg-success">Enviada</span>
+              {% elif m.aberta %}<span class="badge text-bg-warning">Por enviar</span>
+              {% else %}<span class="badge text-bg-secondary">Ainda não disponível</span>{% endif %}
             </td>
-            <td class="small">{{ l.avaliacao.comentario|default:"" }}</td>
+            <td>{% if m.avaliacao %}<strong>{{ m.avaliacao.nota }}</strong>{% endif %}</td>
+            <td class="small">{{ m.avaliacao.comentario|default:"" }}</td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
   </div>
+  {% if proximo_mes %}
+  <a href="{% url 'candidaturas:avaliar_orientador' %}" class="btn btn-primary mb-4"><i class="bi bi-pencil-square me-1"></i>Avaliar o orientador (mês {{ proximo_mes }})</a>
+  {% endif %}
+  {% endif %}
 
   {% if c.estagio_estado == 'CONCLUIDO' %}
   <a href="{% url 'candidaturas:certificado' c.pk %}" class="btn btn-ouro mb-4" target="_blank" rel="noopener">
@@ -46,23 +78,17 @@
   </a>
   {% endif %}
 
-  {% if pode_avaliar %}
-  <a href="{% url 'candidaturas:avaliar' c.pk %}" class="btn btn-primary mb-4">
-    <i class="bi bi-pencil-square me-1"></i>{% if ja_avaliou %}Editar a minha avaliação{% else %}Fazer a minha avaliação{% endif %}
-  </a>
-  {% endif %}
-
   {% if pode_concluir %}
   <div class="card"><div class="card-body">
-    <h2 class="h6">Validar a conclusão</h2>
+    <h2 class="h6">Aprovar a conclusão</h2>
     {% if impedimentos %}
     <p class="small text-secondary">Ainda não é possível concluir:</p>
     <ul class="small">{% for i in impedimentos %}<li>{{ i }}</li>{% endfor %}</ul>
     {% else %}
-    <p class="small text-secondary">Todas as condições estão cumpridas. Ao concluir, a nota final é calculada e o estudante fica disponível.</p>
+    <p class="small text-secondary">Todas as condições estão cumpridas. Ao aprovar, a nota final é calculada e o estudante fica disponível.</p>
     <form method="post" action="{% url 'candidaturas:validar_conclusao' c.pk %}">
       {% csrf_token %}
-      <button type="submit" class="btn btn-success"><i class="bi bi-check2-circle me-1"></i>Validar conclusão do estágio</button>
+      <button type="submit" class="btn btn-success"><i class="bi bi-check2-circle me-1"></i>Aprovar a conclusão do estágio</button>
     </form>
     {% endif %}
   </div></div>

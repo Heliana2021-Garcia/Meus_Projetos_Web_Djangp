@@ -1,54 +1,49 @@
-<!DOCTYPE html>
+{% load static %}<!doctype html>
 <html lang="pt">
 <head>
 <meta charset="utf-8">
 <style>
-  @page { size: A4 landscape; margin: 1.5cm; }
-  body { font-family: Helvetica, Arial, sans-serif; font-size: 9pt; color: #1f2933; }
-  h1 { font-size: 14pt; color: #0B2A5B; margin: 6px 0 2px 0; }
-  .sub { font-size: 8pt; color: #52606d; margin: 0 0 8px 0; }
-  .linha { border-top: 2px solid #C5A059; margin: 4px 0 8px 0; }
-  table.dados { width: 100%; border: 0.5px solid #9aa5b1; }
-  table.dados th { background-color: #0B2A5B; color: #ffffff; text-align: left; padding: 4px; font-size: 8pt; }
-  table.dados td { padding: 4px; border-top: 0.5px solid #cbd2d9; font-size: 8pt; }
-  .totais { margin: 6px 0 8px 0; font-size: 9pt; }
+  @page { size: A4 landscape; margin: 1.4cm; }
+  body { font-family: Helvetica; font-size: 8.5pt; color: #222; }
+  .inst { text-align: center; }
+  .inst .uni { font-size: 11pt; font-weight: bold; color: #0B2A5B; }
+  .inst .ins { font-size: 9pt; color: #333; }
+  h1 { font-size: 13pt; color: #0B2A5B; margin: 4pt 0 0 0; text-align: center; }
+  .barra { border-top: 2pt solid #C5A059; margin: 6pt 0; }
+  table.meta { width: 100%; border-collapse: collapse; margin-top: 4pt; }
+  table.meta td { border: 0.5pt solid #999; padding: 3pt 5pt; }
+  table.meta td.k { background-color: #E8ECF3; font-weight: bold; width: 16%; }
+  table.dados { width: 100%; border-collapse: collapse; margin-top: 8pt; }
+  table.dados th { background-color: #0B2A5B; color: #fff; padding: 4pt; text-align: left; border: 0.5pt solid #0B2A5B; }
+  table.dados td { padding: 3pt 4pt; border: 0.5pt solid #bbb; }
+  .rodape { margin-top: 8pt; }
+  .rodape td { padding: 2pt 4pt; }
 </style>
 </head>
 <body>
-  <table width="100%"><tr>
-    <td width="70">{% if logo %}<img src="{{ logo }}" style="height: 48px;">{% endif %}</td>
-    <td>
-      <b>Universidade de Luanda · INSTIC</b><br>
-      <h1>Relatório de estágios</h1>
-    </td>
-  </tr></table>
-  <div class="linha"></div>
-  <p class="sub">
-    Gerado em {{ gerado_em|date:"d/m/Y H:i" }} por {{ gerado_por }}.
-    {% if filtros_aplicados %}Filtros: {{ filtros_aplicados|join:" | " }}.{% else %}Sem filtros (todos os estágios).{% endif %}
-  </p>
-  <p class="totais">
-    Total: <b>{{ total }}</b> · Por iniciar: <b>{{ contagem.POR_INICIAR }}</b> · Em curso: <b>{{ contagem.EM_CURSO }}</b> ·
-    Interrompidos: <b>{{ contagem.INTERROMPIDO }}</b> · Concluídos: <b>{{ contagem.CONCLUIDO }}</b>
-    {% if media %}· Média das notas finais: <b>{{ media }}</b>{% endif %}
-  </p>
-  <table class="dados" cellspacing="0">
-    <tr><th>Estudante</th><th>Curso</th><th>Empresa</th><th>Vaga</th><th>Modalidade</th><th>Orientador</th><th>Estado</th><th>Início</th><th>Nota</th></tr>
-    {% for c in linhas %}
-    <tr>
-      <td>{{ c.estudante.utilizador.get_full_name|default:c.estudante.utilizador.username }} ({{ c.estudante.numero_estudante }})</td>
-      <td>{{ c.estudante.curso.sigla }}</td>
-      <td>{{ c.vaga.empresa.nome }}</td>
-      <td>{{ c.vaga.titulo }}</td>
-      <td>{{ c.vaga.get_tipo_estagio_display }}</td>
-      <td>{{ c.orientador.utilizador.get_full_name|default:"-" }}</td>
-      <td>{% if c.estagio_estado == 'EM_CURSO' %}Em curso{% elif c.estagio_estado == 'INTERROMPIDO' %}Interrompido{% elif c.estagio_estado == 'CONCLUIDO' %}Concluído{% else %}Por iniciar{% endif %}</td>
-      <td>{% if c.data_inicio %}{{ c.data_inicio|date:"d/m/Y" }}{% else %}-{% endif %}</td>
-      <td>{% if c.estagio_estado == 'CONCLUIDO' %}{{ c.avaliacao_final }}{% else %}-{% endif %}</td>
-    </tr>
-    {% empty %}
-    <tr><td colspan="9">Nenhum estágio corresponde aos filtros.</td></tr>
-    {% endfor %}
-  </table>
+<table width="100%"><tr>
+  <td width="18%"><img src="{% static 'img/logo_instic.png' %}" height="42"></td>
+  <td class="inst">
+    <div class="uni">UNIVERSIDADE DE LUANDA</div>
+    <div class="ins">Instituto de Tecnologias de Informação e Comunicação (INSTIC)</div>
+    <h1>REGISTO DE DADOS — {{ rel.titulo|upper }}</h1>
+  </td>
+  <td width="18%"></td>
+</tr></table>
+<div class="barra"></div>
+<table class="meta">
+  <tr><td class="k">Departamento</td><td>{{ meta.departamento }}</td><td class="k">Período</td><td>{{ meta.periodo }}</td></tr>
+  <tr><td class="k">Responsável</td><td>{{ meta.responsavel }}</td><td class="k">Versão</td><td>{{ meta.versao }}</td></tr>
+  <tr><td class="k">Data de Elaboração</td><td>{{ meta.data }}</td><td class="k">Filtros</td><td>{% if meta.filtros %}{{ meta.filtros|join:" | " }}{% else %}Sem filtros{% endif %}</td></tr>
+</table>
+<table class="dados" repeat="1">
+  <thead><tr>{% for c in meta.colunas %}<th>{{ c }}</th>{% endfor %}</tr></thead>
+  <tbody>
+  {% for r in rel.registos %}<tr><td>{{ forloop.counter }}</td>{% for c in r %}<td>{{ c }}</td>{% endfor %}</tr>{% empty %}<tr><td colspan="6">Sem registos para os filtros escolhidos.</td></tr>{% endfor %}
+  </tbody>
+</table>
+<table class="rodape">
+  <tr><td><strong>Total de Registos:</strong> {{ rel.total }}</td><td><strong>Data de Actualização:</strong> {{ meta.data }}</td></tr>
+</table>
 </body>
 </html>

@@ -219,12 +219,15 @@ class DecidirView(TipoRequeridoMixin, View):
         )
         validar = request.POST.get("acao") == "validar"
         try:
-            item.decidir(request.user, validar, request.POST.get("comentario", ""))
+            item.decidir(request.user, validar, request.POST.get("comentario", ""), request.POST.get("nota"))
         except ValidationError as erro:
             for mensagem in erro.messages:
                 messages.error(request, mensagem)
         else:
             messages.success(request, "Decisão registada.")
+            from . import servicos_avaliacao
+
+            servicos_avaliacao.avisar_se_pronto(item.candidatura)
         return redirect("candidaturas:acompanhar", pk=item.candidatura_id)
 from apps.core.notificacoes import notificar  # noqa: E402
 from apps.vagas.mixins import EmpresaRequeridaMixin  # noqa: E402

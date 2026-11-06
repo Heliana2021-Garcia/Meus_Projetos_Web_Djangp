@@ -30,7 +30,7 @@ class PerfilEstudanteForm(EstiloCamposMixin, forms.ModelForm):
 class DocumentosEstudanteForm(EstiloCamposMixin, forms.Form):
     declaracao_notas = forms.FileField(label="Declaração com notas", required=False,
                                        help_text="PDF, PNG ou JPG, até 5 MB.")
-    bilhete_identidade = forms.FileField(label="Bilhete de identidade", required=False,
+    declaracao_frequencia = forms.FileField(label="Declaração de frequência", required=False,
                                          help_text="PDF, PNG ou JPG, até 5 MB.")
 
     def __init__(self, *args, perfil, **kwargs):
@@ -39,19 +39,19 @@ class DocumentosEstudanteForm(EstiloCamposMixin, forms.Form):
         existentes = set(perfil.documentos.values_list("tipo", flat=True))
         if DocumentoEstudante.Tipo.DECLARACAO not in existentes:
             self.fields["declaracao_notas"].required = True
-        if DocumentoEstudante.Tipo.BI not in existentes:
-            self.fields["bilhete_identidade"].required = True
+        if DocumentoEstudante.Tipo.FREQUENCIA not in existentes:
+            self.fields["declaracao_frequencia"].required = True
 
     def clean_declaracao_notas(self):
         ficheiro = self.cleaned_data.get("declaracao_notas")
         return validar_documento(ficheiro) if ficheiro else ficheiro
 
-    def clean_bilhete_identidade(self):
-        ficheiro = self.cleaned_data.get("bilhete_identidade")
+    def clean_declaracao_frequencia(self):
+        ficheiro = self.cleaned_data.get("declaracao_frequencia")
         return validar_documento(ficheiro) if ficheiro else ficheiro
 
     def clean(self):
         dados = super().clean()
-        if not self.errors and not dados.get("declaracao_notas") and not dados.get("bilhete_identidade"):
+        if not self.errors and not dados.get("declaracao_notas") and not dados.get("declaracao_frequencia"):
             raise forms.ValidationError("Seleccione pelo menos um ficheiro para enviar.")
         return dados

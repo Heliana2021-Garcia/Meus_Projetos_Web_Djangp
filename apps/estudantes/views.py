@@ -74,8 +74,8 @@ class DocumentosEstudanteView(TipoRequeridoMixin, FormView):
         dados = form.cleaned_data
         if dados.get("declaracao_notas"):
             self.perfil.guardar_documento(DocumentoEstudante.Tipo.DECLARACAO, dados["declaracao_notas"])
-        if dados.get("bilhete_identidade"):
-            self.perfil.guardar_documento(DocumentoEstudante.Tipo.BI, dados["bilhete_identidade"])
+        if dados.get("declaracao_frequencia"):
+            self.perfil.guardar_documento(DocumentoEstudante.Tipo.FREQUENCIA, dados["declaracao_frequencia"])
         if self.perfil.registo_estado == PerfilEstudante.Registo.DEVOLVIDO:
             self.perfil.resubmeter_registo()
             notificar_gestao(

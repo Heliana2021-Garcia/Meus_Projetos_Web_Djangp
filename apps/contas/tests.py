@@ -123,7 +123,7 @@ class RegistoEValidacaoDeEstudantesTests(TestCase):
         self.curso = Curso.objects.create(nome="Engenharia Informatica", sigla="EI")
         self.coord = User.objects.create_user("coord", "coord@t.ao", "x", tipo="COORDENADOR")
 
-    def _registar(self, ficheiro_bi=None, username="novo"):
+    def _registar(self, ficheiro_frequencia=None, username="novo"):
         return self.client.post(
             reverse("contas:registo_estudante"),
             {
@@ -132,8 +132,8 @@ class RegistoEValidacaoDeEstudantesTests(TestCase):
                 "username": username, "email": f"{username}@t.ao",
                 "password1": "Palavra-passe-segura-9", "password2": "Palavra-passe-segura-9",
                 "declaracao_notas": SimpleUploadedFile("notas.pdf", b"%PDF-1.4 teste"),
-                "bilhete_identidade": ficheiro_bi
-                or SimpleUploadedFile("bi.pdf", b"%PDF-1.4 teste"),
+                "declaracao_frequencia": ficheiro_frequencia
+                or SimpleUploadedFile("frequencia.pdf", b"%PDF-1.4 teste"),
             },
         )
 
@@ -152,8 +152,8 @@ class RegistoEValidacaoDeEstudantesTests(TestCase):
         self.assertTrue(Notificacao.objects.filter(destinatario=self.coord).exists())
 
     def test_ficheiro_com_conteudo_falso_e_recusado(self):
-        falso = SimpleUploadedFile("bi.pdf", b"MZ isto nao e um pdf")
-        resposta = self._registar(ficheiro_bi=falso)
+        falso = SimpleUploadedFile("frequencia.pdf", b"MZ isto nao e um pdf")
+        resposta = self._registar(ficheiro_frequencia=falso)
         self.assertEqual(resposta.status_code, 200)
         self.assertFalse(User.objects.filter(username="novo").exists())
 
@@ -178,13 +178,13 @@ class RegistoEValidacaoDeEstudantesTests(TestCase):
         perfil.refresh_from_db()
         self.assertEqual(perfil.registo_estado, PerfilEstudante.Registo.PENDENTE)
 
-        self.client.post(reverse("relatorios:devolver_estudante", args=[perfil.pk]), {"motivo": "BI ilegível."})
+        self.client.post(reverse("relatorios:devolver_estudante", args=[perfil.pk]), {"motivo": "Declaracao ilegivel."})
         perfil.refresh_from_db()
         self.assertEqual(perfil.registo_estado, PerfilEstudante.Registo.DEVOLVIDO)
 
         self.client.force_login(perfil.utilizador)
         novo = SimpleUploadedFile("bi2.pdf", b"%PDF-1.4 novo")
-        self.client.post(reverse("estudantes:documentos"), {"bilhete_identidade": novo})
+        self.client.post(reverse("estudantes:documentos"), {"declaracao_frequencia": novo})
         perfil.refresh_from_db()
         self._limpar_ficheiros(perfil)
         self.assertEqual(perfil.registo_estado, PerfilEstudante.Registo.PENDENTE)

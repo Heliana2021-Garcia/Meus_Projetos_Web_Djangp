@@ -42,7 +42,9 @@ class RelatorioGestaoTests(TestCase):
         self.client.force_login(self.coord)
         csv_ = self.client.get(self.url, {"entidade": "candidaturas", "formato": "csv"})
         self.assertTrue(csv_["Content-Type"].startswith("text/csv"))
-        self.assertIn("Estudante", csv_.content.decode("utf-8-sig"))
+        conteudo = csv_.content.decode("utf-8-sig")
+        for esperado in ("REGISTO DE DADOS", "Nome Completo", "Total de Registos", "Data de Actualização"):
+            self.assertIn(esperado, conteudo)
         pdf = self.client.get(self.url, {"entidade": "vagas", "formato": "pdf"})
         self.assertEqual(pdf["Content-Type"], "application/pdf")
         self.assertTrue(pdf.content.startswith(b"%PDF"))

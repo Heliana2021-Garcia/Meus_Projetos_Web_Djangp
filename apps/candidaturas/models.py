@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -461,6 +461,8 @@ class Acompanhamento(models.Model):
     class Meta:
         abstract = True
 
+    exige_nota = False
+
     @property
     def editavel(self):
         return self.estado != self.Estado.VALIDADO
@@ -475,7 +477,7 @@ class Acompanhamento(models.Model):
                 reverse("candidaturas:acompanhar", args=[self.candidatura_id]),
             )
 
-    def decidir(self, utilizador, validar, comentario=""):
+    def decidir(self, utilizador, validar, comentario="", nota=None):
         orientador = self.candidatura.orientador
         if orientador is None or orientador.utilizador_id != utilizador.pk:
             raise ValidationError("Só o orientador atribuído pode decidir.")
@@ -484,14 +486,27 @@ class Acompanhamento(models.Model):
         comentario = (comentario or "").strip()
         if not validar and not comentario:
             raise ValidationError("Indique o que deve ser corrigido.")
+        nota_decimal = None
+        if validar and self.exige_nota:
+            try:
+                nota_decimal = Decimal(str(nota).strip().replace(",", "."))
+            except (InvalidOperation, ValueError):
+                raise ValidationError("Indique a nota do registo (de 0 a 20).")
+            if not nota_decimal.is_finite() or not Decimal("0") <= nota_decimal <= Decimal("20"):
+                raise ValidationError("A nota tem de estar entre 0 e 20.")
+            nota_decimal = nota_decimal.quantize(Decimal("0.01"))
 
         self.estado = self.Estado.VALIDADO if validar else self.Estado.CORRECAO
         self.comentario_orientador = comentario
+        if self.exige_nota:
+            self.nota = nota_decimal
         self.validado_por = utilizador
         self.validado_em = timezone.now()
         self.save()
 
-        resultado = "validado" if validar else f"correcção pedida: {comentario}"
+        resultado = (
+            f"validado com a nota {nota_decimal}/20" if nota_decimal is not None else "validado"
+        ) if validar else f"correcção pedida: {comentario}"
         notificar(
             self.candidatura.estudante.utilizador,
             "Decisão do orientador",
@@ -506,6 +521,11 @@ class RegistoDiario(Acompanhamento):
     descricao = models.TextField("actividades realizadas")
     competencias = models.TextField("conhecimentos e competências", blank=True)
     observacoes = models.TextField("observações", blank=True)
+    nota = models.DecimalField(
+        "nota do orientador (0 a 20)", max_digits=4, decimal_places=2, null=True, blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(20)],
+    )
+    exige_nota = True
 
     class Meta:
         ordering = ["-data"]
@@ -556,77 +576,32 @@ class RelatorioEstagio(Acompanhamento):
     def url_estudante(self):
         return reverse("candidaturas:relatorios")
 
-from decimal import ROUND_HALF_UP, Decimal  # noqa: E402
 
-from django.core.validators import MaxValueValidator, MinValueValidator  # noqa: E402
+class AvaliacaoMensal(models.Model):
+    """Avaliação do orientador feita pelo estudante, de 30 em 30 dias. Só a empresa a vê."""
 
-
-def pesos_avaliacao():
-    from django.conf import settings
-
-    return getattr(
-        settings, "PESOS_AVALIACAO",
-        {"EMPRESA": 30, "ORIENTADOR": 30, "ESTUDANTE": 10, "COORDENADOR": 30},
+    candidatura = models.ForeignKey(
+        Candidatura, on_delete=models.CASCADE, related_name="avaliacoes_mensais"
     )
-
-
-def _nota(rotulo):
-    return models.DecimalField(
-        rotulo, max_digits=4, decimal_places=2,
-        validators=[MinValueValidator(Decimal("0")), MaxValueValidator(Decimal("20"))],
+    mes = models.PositiveSmallIntegerField("mês do estágio")
+    orientador = models.ForeignKey(
+        "empresas.Orientador", null=True, blank=True, on_delete=models.SET_NULL,
+        related_name="+", verbose_name="orientador avaliado",
     )
-
-
-class Avaliacao(models.Model):
-    """Avaliação do estágio feita por um dos intervenientes (uma por papel)."""
-
-    class Papel(models.TextChoices):
-        EMPRESA = "EMPRESA", "Empresa"
-        ORIENTADOR = "ORIENTADOR", "Orientador empresarial"
-        ESTUDANTE = "ESTUDANTE", "Estudante"
-        COORDENADOR = "COORDENADOR", "Coordenação institucional"
-
-    CRITERIOS = (
-        ("objectivos", "Cumprimento dos objectivos"),
-        ("qualidade", "Qualidade das actividades"),
-        ("responsabilidade", "Responsabilidade"),
-        ("assiduidade", "Assiduidade"),
-        ("competencias", "Evolução das competências"),
+    nota = models.DecimalField(
+        "nota (0 a 20)", max_digits=4, decimal_places=2,
+        validators=[MinValueValidator(0), MaxValueValidator(20)],
     )
-
-    candidatura = models.ForeignKey(Candidatura, on_delete=models.CASCADE, related_name="avaliacoes")
-    papel = models.CharField("avaliador", max_length=12, choices=Papel.choices)
-    avaliador = models.ForeignKey(
-        "contas.Utilizador", null=True, blank=True, on_delete=models.SET_NULL,
-        related_name="+", verbose_name="registada por",
-    )
-    objectivos = _nota("Cumprimento dos objectivos")
-    qualidade = _nota("Qualidade das actividades")
-    responsabilidade = _nota("Responsabilidade")
-    assiduidade = _nota("Assiduidade")
-    competencias = _nota("Evolução das competências")
-    nota = models.DecimalField("nota", max_digits=5, decimal_places=2, default=0, editable=False)
     comentario = models.TextField("comentário", blank=True)
     criado_em = models.DateTimeField(auto_now_add=True)
-    atualizado_em = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["papel"]
-        verbose_name = "avaliação"
-        verbose_name_plural = "avaliações"
+        ordering = ["mes"]
+        verbose_name = "avaliação mensal do orientador"
+        verbose_name_plural = "avaliações mensais do orientador"
         constraints = [
-            models.UniqueConstraint(fields=["candidatura", "papel"], name="avaliacao_unica_por_papel"),
+            models.UniqueConstraint(fields=["candidatura", "mes"], name="avaliacao_mensal_unica"),
         ]
 
     def __str__(self):
-        return f"{self.get_papel_display()} · {self.candidatura} · {self.nota}"
-
-    @property
-    def peso(self):
-        return pesos_avaliacao().get(self.papel, 0)
-
-    def save(self, *args, **kwargs):
-        valores = [getattr(self, nome) for nome, _ in self.CRITERIOS]
-        media = sum((Decimal(v) for v in valores), Decimal("0")) / len(valores)
-        self.nota = media.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-        super().save(*args, **kwargs)
+        return f"Mês {self.mes} · {self.candidatura}"

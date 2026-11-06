@@ -22,7 +22,7 @@ class CertificadoView(TipoRequeridoMixin, View):
         if c.estagio_estado != "CONCLUIDO":
             messages.error(
                 request,
-                "O certificado só fica disponível depois de a coordenação validar a conclusão do estágio.",
+                "O certificado só fica disponível depois de a empresa aprovar a conclusão do estágio.",
             )
             return redirect("candidaturas:avaliacao", pk=c.pk)
 

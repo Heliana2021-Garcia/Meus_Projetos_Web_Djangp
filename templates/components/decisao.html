@@ -1,10 +1,16 @@
 {% if pode_decidir and item.estado == 'SUBMETIDO' %}
 <form method="post" action="{% url 'candidaturas:decidir' tipo item.pk %}" class="mt-3">
   {% csrf_token %}
+  {% if tipo == 'registo' %}
+  <div class="mb-2" style="max-width: 14rem;">
+    <label class="form-label small mb-1" for="nota-{{ item.pk }}">Nota do registo (0 a 20)</label>
+    <input type="number" id="nota-{{ item.pk }}" name="nota" min="0" max="20" step="0.5" class="form-control form-control-sm" required>
+  </div>
+  {% endif %}
   <textarea name="comentario" rows="2" class="form-control form-control-sm mb-2" placeholder="Comentário (obrigatório para pedir correcção)"></textarea>
   <div class="d-flex gap-2">
-    <button type="submit" name="acao" value="validar" class="btn btn-success btn-sm"><i class="bi bi-check-lg me-1"></i>Validar</button>
-    <button type="submit" name="acao" value="corrigir" class="btn btn-outline-danger btn-sm">Pedir correcção</button>
+    <button type="submit" name="acao" value="validar" class="btn btn-success btn-sm"><i class="bi bi-check-lg me-1"></i>Validar{% if tipo == 'registo' %} e dar nota{% endif %}</button>
+    <button type="submit" name="acao" value="corrigir" class="btn btn-outline-danger btn-sm" formnovalidate>Pedir correcção</button>
   </div>
 </form>
 {% endif %}

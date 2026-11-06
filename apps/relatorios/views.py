@@ -1,4 +1,6 @@
 import csv
+
+from . import modelo_registo as modelo
 from datetime import date
 
 from django.contrib import messages
@@ -91,47 +93,39 @@ class ExportarColocacoesView(TipoRequeridoMixin, View):
     tipos_permitidos = (Utilizador.Tipo.ADMINISTRADOR, Utilizador.Tipo.COORDENADOR)
 
     def get(self, request):
-        resposta = HttpResponse(content_type="text/csv; charset=utf-8")
-        resposta["Content-Disposition"] = (
-            f'attachment; filename="colocacoes-{date.today():%Y-%m-%d}.csv"'
-        )
-        resposta.write("\ufeff")  # para o Excel reconhecer os acentos
-
-        escritor = csv.writer(resposta, delimiter=";")
-        escritor.writerow(
-            [
-                "Número de estudante", "Nome", "Curso", "Ano", "Média geral",
-                "Empresa", "Tipo de empresa", "Vaga", "Estado",
-                "Avaliação final", "Estágio concluído em", "Carta de encaminhamento",
-            ]
-        )
-
         candidaturas = (
             Candidatura.objects.filter(estado=Candidatura.Estado.APROVADO)
-            .select_related(
-                "estudante__utilizador", "estudante__curso", "vaga__empresa", "carta"
-            )
+            .select_related("estudante__utilizador", "estudante__curso", "vaga__empresa")
             .order_by("estudante__curso__nome", "estudante__numero_estudante")
         )
+        registos = []
         for c in candidaturas:
             e = c.estudante
             carta = getattr(c, "carta", None)
-            escritor.writerow(
-                [
-                    _seguro(e.numero_estudante),
-                    _seguro(e.utilizador.get_full_name() or e.utilizador.username),
-                    _seguro(e.curso.nome),
-                    e.ano_frequencia,
-                    _numero(e.media_geral),
-                    _seguro(c.vaga.empresa.nome),
+            registos.append((
+                e.utilizador.get_full_name() or e.utilizador.username,
+                e.curso.nome,
+                modelo.telefone(e),
+                e.utilizador.email,
+                modelo.observacoes(
+                    "N.º " + str(e.numero_estudante),
+                    str(e.ano_frequencia) + ".º ano",
+                    "Média " + str(e.media_geral),
+                    c.vaga.empresa.nome,
                     c.vaga.empresa.get_tipo_display(),
-                    _seguro(c.vaga.titulo),
+                    c.vaga.titulo,
                     "Concluído" if c.concluida_em else "Em curso",
-                    _numero(c.avaliacao_final),
-                    c.concluida_em.strftime("%d/%m/%Y") if c.concluida_em else "",
-                    carta.referencia if carta else "",
-                ]
-            )
+                    ("Avaliação final " + str(c.avaliacao_final)) if c.avaliacao_final is not None else "",
+                    ("Concluído em " + c.concluida_em.strftime("%d/%m/%Y")) if c.concluida_em else "",
+                    "Carta de encaminhamento emitida" if carta else "",
+                ),
+            ))
+        conteudo = modelo.csv_registo("Colocações", registos, request.user,
+                                      periodo="Estágios com candidatura aprovada")
+        resposta = HttpResponse(conteudo, content_type="text/csv; charset=utf-8")
+        resposta["Content-Disposition"] = (
+            f'attachment; filename="colocacoes-{date.today():%Y-%m-%d}.csv"'
+        )
         return resposta
 
 class VagasEmAnaliseView(TipoRequeridoMixin, ListView):

@@ -36,20 +36,19 @@ class RegistoEstudanteForm(EstiloCamposMixin, UserCreationForm):
         max_value=20,
         max_digits=4,
         decimal_places=2,
-        localize=True,
     )
     declaracao_notas = forms.FileField(
         label="Declaração com notas",
         help_text="PDF, PNG ou JPG, até 5 MB.",
     )
-    bilhete_identidade = forms.FileField(
-        label="Bilhete de identidade",
+    declaracao_frequencia = forms.FileField(
+        label="Declaração de frequência",
         help_text="PDF, PNG ou JPG, até 5 MB.",
     )
 
     field_order = [
         "first_name", "last_name", "numero_estudante", "curso", "ano_frequencia",
-        "media_geral", "declaracao_notas", "bilhete_identidade",
+        "media_geral", "declaracao_notas", "declaracao_frequencia",
         "email", "password1", "password2",
     ]
 
@@ -75,8 +74,8 @@ class RegistoEstudanteForm(EstiloCamposMixin, UserCreationForm):
     def clean_declaracao_notas(self):
         return validar_documento(self.cleaned_data["declaracao_notas"])
 
-    def clean_bilhete_identidade(self):
-        return validar_documento(self.cleaned_data["bilhete_identidade"])
+    def clean_declaracao_frequencia(self):
+        return validar_documento(self.cleaned_data["declaracao_frequencia"])
 
     @transaction.atomic
     def save(self, commit=True):
@@ -93,7 +92,7 @@ class RegistoEstudanteForm(EstiloCamposMixin, UserCreationForm):
             registo_estado=PerfilEstudante.Registo.PENDENTE,
         )
         perfil.guardar_documento(DocumentoEstudante.Tipo.DECLARACAO, self.cleaned_data["declaracao_notas"])
-        perfil.guardar_documento(DocumentoEstudante.Tipo.BI, self.cleaned_data["bilhete_identidade"])
+        perfil.guardar_documento(DocumentoEstudante.Tipo.FREQUENCIA, self.cleaned_data["declaracao_frequencia"])
         return utilizador
 
 

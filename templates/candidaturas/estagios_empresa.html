@@ -9,7 +9,25 @@
 </div>
 {% endif %}
 
-<div class="sigest-medio">
+<form method="get" class="card mb-3"><div class="card-body py-3"><div class="row g-2 align-items-end">
+  <div class="col-12 col-md">
+    <label class="form-label small text-secondary mb-1" for="f-q">Pesquisar</label>
+    <input id="f-q" type="search" name="q" value="{{ q }}" class="form-control" placeholder="Nome, n.º de estudante ou vaga">
+  </div>
+  <div class="col-6 col-md-3">
+    <label class="form-label small text-secondary mb-1" for="f-orientador">Orientador</label>
+    <select id="f-orientador" name="orientador" class="form-select">
+      <option value="">Todos</option>
+      {% for valor, rotulo in opcoes_orientador %}<option value="{{ valor }}" {% if valor|stringformat:"s" == orientador_filtro %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-12 col-md-auto d-flex gap-2">
+    <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1"></i>Filtrar</button>
+    {% if tem_filtros %}<a href="{% url 'candidaturas:estagios' %}" class="btn btn-outline-secondary">Limpar</a>{% endif %}
+  </div>
+</div></div></form>
+
+<div class="{% if estagios %}sigest-medio{% endif %}">
   {% for e in estagios %}
   <article class="card mb-3"><div class="card-body">
     <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
@@ -88,7 +106,7 @@
   {% empty %}
   <div class="card"><div class="card-body text-center py-5 text-secondary">
     <i class="bi bi-briefcase fs-1"></i>
-    <p class="mt-2 mb-0">Ainda não há estagiários. Aparecem aqui quando aprovar uma candidatura.</p>
+    <p class="mt-2 mb-0">{% if tem_filtros %}Nenhum estagiário corresponde aos filtros escolhidos.{% else %}Ainda não há estagiários. Aparecem aqui quando aprovar uma candidatura.{% endif %}</p>
   </div></div>
   {% endfor %}
 </div>

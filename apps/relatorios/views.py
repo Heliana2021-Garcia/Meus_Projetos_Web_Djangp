@@ -5,6 +5,7 @@ from datetime import date
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.http import HttpResponse
 from django.urls import reverse
 from django.shortcuts import get_object_or_404, redirect
@@ -16,7 +17,7 @@ from apps.contas.mixins import TipoRequeridoMixin
 from apps.contas.models import Utilizador
 from apps.empresas.models import Empresa
 from apps.core.notificacoes import notificar
-from apps.estudantes.models import PerfilEstudante
+from apps.estudantes.models import Curso, PerfilEstudante
 from apps.vagas.models import Vaga
 
 from . import servicos
@@ -191,12 +192,32 @@ class EstudantesPendentesView(TipoRequeridoMixin, ListView):
     context_object_name = "perfis"
 
     def get_queryset(self):
-        return (
+        consulta = (
             PerfilEstudante.objects.filter(registo_estado=PerfilEstudante.Registo.PENDENTE)
             .select_related("utilizador", "curso")
             .prefetch_related("documentos")
             .order_by("criado_em")
         )
+        q = self.request.GET.get("q", "").strip()
+        if q:
+            consulta = consulta.filter(
+                Q(utilizador__first_name__icontains=q)
+                | Q(utilizador__last_name__icontains=q)
+                | Q(utilizador__email__icontains=q)
+                | Q(numero_estudante__icontains=q)
+            )
+        curso = self.request.GET.get("curso", "").strip()
+        if curso.isdigit():
+            consulta = consulta.filter(curso_id=int(curso))
+        return consulta
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        contexto["q"] = self.request.GET.get("q", "").strip()
+        contexto["curso_filtro"] = self.request.GET.get("curso", "").strip()
+        contexto["cursos"] = Curso.objects.values_list("pk", "nome")
+        contexto["tem_filtros"] = bool(contexto["q"] or contexto["curso_filtro"])
+        return contexto
 
 
 class AprovarEstudanteView(TipoRequeridoMixin, View):
@@ -238,7 +259,7 @@ class DevolverEstudanteView(TipoRequeridoMixin, View):
                 perfil.utilizador,
                 "Registo devolvido para correcção",
                 f"A coordenação devolveu o seu registo: {perfil.registo_motivo}",
-                reverse("estudantes:documentos"),
+                reverse("contas:editar_perfil") + "#documentos",
             )
             messages.success(request, f"Registo de {perfil.utilizador} devolvido ao estudante.")
         return redirect("relatorios:estudantes_pendentes")

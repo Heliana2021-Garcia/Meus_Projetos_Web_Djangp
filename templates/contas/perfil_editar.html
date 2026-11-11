@@ -12,7 +12,7 @@
       {% csrf_token %}
       <input type="hidden" name="accao" value="conta">
       {% if form.non_field_errors %}<div class="alert alert-danger py-2 small">{{ form.non_field_errors.0 }}</div>{% endif %}
-      {% for campo in form %}{% include "components/campo.html" %}{% endfor %}
+      <div class="sigest-form-grelha">{% for campo in form %}{% include "components/campo.html" %}{% endfor %}</div>
       <p class="form-text">O email serve também para entrar no sistema.</p>
       <button type="submit" class="btn btn-primary">Guardar dados da conta</button>
     </form>
@@ -36,7 +36,7 @@
       {% csrf_token %}
       <input type="hidden" name="accao" value="perfil">
       {% if form.non_field_errors %}<div class="alert alert-danger py-2 small">{{ form.non_field_errors.0 }}</div>{% endif %}
-      {% for campo in form %}{% include "components/campo.html" %}{% endfor %}
+      <div class="sigest-form-grelha">{% for campo in form %}{% include "components/campo.html" %}{% endfor %}</div>
       <button type="submit" class="btn btn-primary">Guardar perfil</button>
     </form>
   </div></div>
@@ -72,7 +72,7 @@
       {% csrf_token %}
       <input type="hidden" name="accao" value="documentos">
       {% if form.non_field_errors %}<div class="alert alert-danger py-2 small">{{ form.non_field_errors.0 }}</div>{% endif %}
-      {% for campo in form %}{% include "components/campo.html" %}{% endfor %}
+      <div class="sigest-form-grelha">{% for campo in form %}{% include "components/campo.html" %}{% endfor %}</div>
       <button type="submit" class="btn btn-primary">Enviar documentos</button>
     </form>
     {% endwith %}
@@ -90,7 +90,7 @@
       {% csrf_token %}
       <input type="hidden" name="accao" value="senha">
       {% if form.non_field_errors %}<div class="alert alert-danger py-2 small">{{ form.non_field_errors.0 }}</div>{% endif %}
-      {% for campo in form %}{% include "components/campo.html" %}{% endfor %}
+      <div class="sigest-form-grelha">{% for campo in form %}{% include "components/campo.html" %}{% endfor %}</div>
       <button type="submit" class="btn btn-primary">Alterar palavra-passe</button>
     </form>
   </div></div>

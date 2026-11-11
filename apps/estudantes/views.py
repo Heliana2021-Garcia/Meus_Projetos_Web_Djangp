@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404, redirect
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import FormView, TemplateView
 
@@ -25,6 +25,23 @@ class PainelEstudanteView(TipoRequeridoMixin, TemplateView):
             .filter(utilizador=self.request.user)
             .first()
         )
+        perfil = contexto["perfil"]
+        if perfil:
+            from apps.candidaturas.models import Candidatura
+            from apps.candidaturas.views_estagio import estagio_do_estudante
+
+            contexto["documentos"] = perfil.documentos.all()
+            contexto["estagio_actual"] = estagio_do_estudante(perfil)
+            if contexto["estagio_actual"] is None:
+                ordem = Candidatura.ESTADOS_ATIVOS
+                activas = sorted(
+                    Candidatura.objects.filter(estudante=perfil, estado__in=ordem)
+                    .select_related("vaga__empresa"),
+                    key=lambda c: ordem.index(c.estado),
+                    reverse=True,
+                )
+                contexto["candidatura_avancada"] = activas[0] if activas else None
+                contexto["total_activas"] = len(activas)
         return contexto
 
 
@@ -50,6 +67,10 @@ class DocumentosEstudanteView(TipoRequeridoMixin, FormView):
         contexto["documentos"] = self.perfil.documentos.all()
         contexto["pode_enviar"] = self.perfil.registo_estado != PerfilEstudante.Registo.APROVADO
         return contexto
+
+    def get(self, request, *args, **kwargs):
+        # Os documentos passaram para «Editar o meu perfil».
+        return redirect(reverse("contas:editar_perfil") + "#documentos")
 
     def post(self, request, *args, **kwargs):
         if self.perfil.registo_estado == PerfilEstudante.Registo.APROVADO:

@@ -2,7 +2,7 @@
 {% block titulo %}O meu estágio{% endblock %}
 {% block conteudo %}
 {% include "components/cabecalho_pagina.html" with titulo="O meu estágio" descricao="Empresa, orientador, datas e confirmação de início." %}
-<div class="sigest-estreito">
+<div class="{% if estagio %}sigest-estreito{% endif %}">
   {% if estagio %}
   <div class="card mb-3"><div class="card-body p-4">
     <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">

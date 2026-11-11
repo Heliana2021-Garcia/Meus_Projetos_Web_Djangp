@@ -1,13 +1,13 @@
 {% if campo.is_hidden %}{{ campo }}
 {% elif campo.widget_type == "checkbox" %}
-<div class="form-check mb-3">
+<div class="form-check mb-3 sigest-campo-largo">
   {{ campo }}
   <label class="form-check-label" for="{{ campo.id_for_label }}">{{ campo.label }}</label>
   {% if campo.help_text %}<div class="form-text">{{ campo.help_text }}</div>{% endif %}
   {% for erro in campo.errors %}<div class="invalid-feedback d-block">{{ erro }}</div>{% endfor %}
 </div>
 {% else %}
-<div class="mb-3">
+<div class="mb-3{% if campo.widget_type == 'textarea' or campo.widget_type == 'checkboxselectmultiple' %} sigest-campo-largo{% endif %}">
   <label for="{{ campo.id_for_label }}" class="form-label">
     {{ campo.label }}{% if campo.field.required %} <span class="text-danger" title="Obrigatório" aria-hidden="true">*</span>{% endif %}
   </label>

@@ -8,7 +8,7 @@
   {% endif %}
   <form method="post" novalidate>
     {% csrf_token %}
-    {% for campo in form %}{% include "components/campo.html" %}{% endfor %}
+    <div class="sigest-form-grelha">{% for campo in form %}{% include "components/campo.html" %}{% endfor %}</div>
     <button type="submit" class="btn btn-primary">Guardar</button>
     <a href="{% url 'candidaturas:diario' %}" class="btn btn-outline-secondary">Cancelar</a>
   </form>

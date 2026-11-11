@@ -32,7 +32,7 @@
       <form method="post" novalidate>
         {% csrf_token %}
         {% if form.non_field_errors %}<div class="alert alert-danger py-2 small">{{ form.non_field_errors.0 }}</div>{% endif %}
-        {% for campo in form %}{% include "components/campo.html" %}{% endfor %}
+        <div class="sigest-form-grelha">{% for campo in form %}{% include "components/campo.html" %}{% endfor %}</div>
         <button type="submit" class="btn btn-primary">Criar orientador</button>
       </form>
     </div></div>

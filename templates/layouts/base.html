@@ -32,15 +32,13 @@
           {% endif %}
         </a>
         <div class="dropdown">
-          <button class="btn btn-light dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="bi bi-person-circle"></i>
-            <span class="d-none d-sm-inline">{{ user.get_full_name|default:user.username }}</span>
+          <button class="btn btn-light sigest-btn-utilizador" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="{{ user.get_full_name|default:user.username }}" aria-label="Menu do utilizador">
+            <i class="bi bi-person-circle fs-5"></i>
           </button>
           <ul class="dropdown-menu dropdown-menu-end">
-            <li><span class="dropdown-item-text small text-secondary">{{ user.get_tipo_display }}</span></li>
+            <li><span class="dropdown-item-text"><strong class="d-block">{{ user.get_full_name|default:user.username }}</strong><small class="text-secondary">{{ user.get_tipo_display }}</small></span></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="{% url 'contas:perfil' %}"><i class="bi bi-person me-2"></i>Perfil</a></li>
-            <li><a class="dropdown-item" href="{% url 'contas:editar_perfil' %}"><i class="bi bi-pencil-square me-2"></i>Editar o meu perfil</a></li>
             <li><hr class="dropdown-divider"></li>
             <li>
               <form method="post" action="{% url 'contas:sair' %}" data-confirmar="Tem a certeza de que pretende terminar a sess&atilde;o?" data-confirmar-titulo="Terminar sess&atilde;o" data-confirmar-botao="Terminar sess&atilde;o" data-confirmar-tipo="primario">
@@ -68,7 +66,6 @@
             <li class="nav-item"><a class="nav-link {% if vn == 'vagas:feed' or vn == 'vagas:detalhe' %}active{% endif %}" href="{% url 'vagas:feed' %}"><i class="bi bi-briefcase"></i> Oportunidades</a></li>
             <li class="nav-item"><a class="nav-link {% if vn == 'candidaturas:minhas' %}active{% endif %}" href="{% url 'candidaturas:minhas' %}"><i class="bi bi-list-check"></i> Candidaturas</a></li>
             <li class="nav-item"><a class="nav-link {% if vn == 'candidaturas:estagio' %}active{% endif %}" href="{% url 'candidaturas:estagio' %}"><i class="bi bi-mortarboard"></i> Estágio</a></li>
-            <li class="nav-item"><a class="nav-link {% if vn == 'estudantes:documentos' %}active{% endif %}" href="{% url 'estudantes:documentos' %}"><i class="bi bi-folder2-open"></i> Documentos</a></li>
             <li class="nav-item"><a class="nav-link {% if vn == 'candidaturas:diario' or vn == 'candidaturas:registo_editar' %}active{% endif %}" href="{% url 'candidaturas:diario' %}"><i class="bi bi-journal-text"></i> Diário</a></li>
             <li class="nav-item"><a class="nav-link {% if vn == 'candidaturas:relatorios' or vn == 'candidaturas:relatorio' %}active{% endif %}" href="{% url 'candidaturas:relatorios' %}"><i class="bi bi-file-earmark-text"></i> Relatórios</a></li>
             <li class="nav-item"><a class="nav-link {% if vn == 'candidaturas:minha_avaliacao' or vn == 'candidaturas:avaliacao' %}active{% endif %}" href="{% url 'candidaturas:minha_avaliacao' %}"><i class="bi bi-award"></i> Avaliação</a></li>

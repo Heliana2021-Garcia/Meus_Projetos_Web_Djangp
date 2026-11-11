@@ -2,7 +2,7 @@
 {% block titulo %}Vagas em análise{% endblock %}
 {% block conteudo %}
 {% include "components/cabecalho_pagina.html" with titulo="Vagas em análise" descricao="As vagas só ficam visíveis aos estudantes depois de aprovadas pela coordenação." %}
-<div class="sigest-medio">
+<div class="{% if vagas %}sigest-medio{% endif %}">
   {% for vaga in vagas %}
   <article class="card mb-3"><div class="card-body">
     <div class="d-flex justify-content-between align-items-start gap-2">

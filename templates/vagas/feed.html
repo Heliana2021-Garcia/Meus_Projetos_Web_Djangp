@@ -4,23 +4,47 @@
 {% block conteudo %}
 {% include "components/cabecalho_pagina.html" with titulo="Oportunidades de estágio" descricao="As vagas das parceiras institucionais aparecem primeiro." %}
 
-<form method="get" class="row g-2 mb-4">
-  <div class="col-md-8 col-lg-6">
-    <div class="input-group">
-      <input type="search" name="q" value="{{ q }}" class="form-control" placeholder="Procurar por título, empresa ou tecnologia" aria-label="Pesquisar vagas">
-      <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1"></i>Pesquisar</button>
+<form method="get" class="card mb-4"><div class="card-body">
+  <div class="row g-2 align-items-end">
+    <div class="col-12 col-lg-6">
+      <label class="form-label small text-secondary mb-1" for="f-q">Pesquisar</label>
+      <input id="f-q" type="search" name="q" value="{{ q }}" class="form-control" placeholder="Título, empresa ou tecnologia">
+    </div>
+    <div class="col-6 col-lg-3">
+      <label class="form-label small text-secondary mb-1" for="f-tipo">Tipo de estágio</label>
+      <select id="f-tipo" name="tipo" class="form-select">
+        <option value="">Todos</option>
+        {% for valor, rotulo in tipos %}<option value="{{ valor }}" {% if valor == tipo %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-lg-3">
+      <label class="form-label small text-secondary mb-1" for="f-modalidade">Modalidade</label>
+      <select id="f-modalidade" name="modalidade" class="form-select">
+        <option value="">Todas</option>
+        {% for valor, rotulo in modalidades %}<option value="{{ valor }}" {% if valor == modalidade %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-lg-3">
+      <label class="form-label small text-secondary mb-1" for="f-area">Área</label>
+      <input id="f-area" type="search" name="area" value="{{ area }}" class="form-control" placeholder="Ex.: Redes">
+    </div>
+    <div class="col-6 col-lg-3">
+      <label class="form-label small text-secondary mb-1" for="f-localizacao">Localização</label>
+      <input id="f-localizacao" type="search" name="localizacao" value="{{ localizacao }}" class="form-control" placeholder="Ex.: Luanda">
+    </div>
+    <div class="col-6 col-lg-3">
+      <label class="form-label small text-secondary mb-1" for="f-duracao">Duração</label>
+      <select id="f-duracao" name="duracao" class="form-select">
+        <option value="">Qualquer</option>
+        {% for valor, rotulo in duracoes %}<option value="{{ valor }}" {% if valor == duracao %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-lg-3 d-flex gap-2">
+      <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-search me-1"></i>Filtrar</button>
+      {% if tem_filtros %}<a href="{% url 'vagas:feed' %}" class="btn btn-outline-secondary">Limpar</a>{% endif %}
     </div>
   </div>
-  <div class="col-6 col-md-4 col-lg-3">
-    <select name="tipo" class="form-select" aria-label="Tipo de estágio">
-      <option value="">Todos os tipos</option>
-      {% for valor, rotulo in tipos %}<option value="{{ valor }}" {% if valor == tipo %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
-    </select>
-  </div>
-  <div class="col-6 col-md-4 col-lg-3">
-    <input type="search" name="area" value="{{ area }}" class="form-control" placeholder="Área" aria-label="Área de estágio">
-  </div>
-</form>
+</div></form>
 
 {% if not perfil.elegivel %}
 <div class="alert alert-warning">
@@ -78,7 +102,7 @@
   <div class="col-12">
     <div class="card"><div class="card-body text-center py-5 text-secondary">
       <i class="bi bi-briefcase fs-1"></i>
-      <p class="mt-2 mb-0">Não há vagas disponíveis neste momento. Volte a consultar mais tarde ou receba aviso por notificação.</p>
+      <p class="mt-2 mb-0">{% if tem_filtros %}Nenhuma vaga corresponde aos filtros escolhidos. Experimente alargar a pesquisa.{% else %}Não há vagas disponíveis neste momento. Volte a consultar mais tarde ou receba aviso por notificação.{% endif %}</p>
     </div></div>
   </div>
   {% endfor %}
@@ -87,9 +111,9 @@
 {% if is_paginated %}
 <nav class="mt-4" aria-label="Paginação">
   <ul class="pagination justify-content-center">
-    {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?q={{ q|urlencode }}&tipo={{ tipo|urlencode }}&area={{ area|urlencode }}&page={{ page_obj.previous_page_number }}">Anterior</a></li>{% endif %}
+    {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?{% if filtros_url %}{{ filtros_url }}&{% endif %}page={{ page_obj.previous_page_number }}">Anterior</a></li>{% endif %}
     <li class="page-item disabled"><span class="page-link">Página {{ page_obj.number }} de {{ paginator.num_pages }}</span></li>
-    {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?q={{ q|urlencode }}&tipo={{ tipo|urlencode }}&area={{ area|urlencode }}&page={{ page_obj.next_page_number }}">Seguinte</a></li>{% endif %}
+    {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?{% if filtros_url %}{{ filtros_url }}&{% endif %}page={{ page_obj.next_page_number }}">Seguinte</a></li>{% endif %}
   </ul>
 </nav>
 {% endif %}

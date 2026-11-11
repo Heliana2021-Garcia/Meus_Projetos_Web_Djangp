@@ -2,7 +2,7 @@
 {% block titulo %}Diário de actividades{% endblock %}
 {% block conteudo %}
 {% include "components/cabecalho_pagina.html" with titulo="Diário de actividades" descricao="Registe o que fez durante o estágio. O orientador valida cada registo." %}
-<div class="sigest-medio">
+<div class="{% if estagio %}sigest-medio{% endif %}">
   {% if not estagio %}
   <div class="card"><div class="card-body text-center py-5 text-secondary">
     <i class="bi bi-journal-text fs-1"></i>
@@ -16,7 +16,7 @@
     <h2 class="h6 mb-3">Novo registo</h2>
     <form method="post" novalidate>
       {% csrf_token %}
-      {% for campo in form %}{% include "components/campo.html" %}{% endfor %}
+      <div class="sigest-form-grelha">{% for campo in form %}{% include "components/campo.html" %}{% endfor %}</div>
       <button type="submit" class="btn btn-primary">Guardar registo</button>
     </form>
   </div></div>

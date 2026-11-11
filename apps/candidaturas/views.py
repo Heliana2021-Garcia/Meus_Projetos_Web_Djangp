@@ -2,6 +2,7 @@ from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views import View
@@ -47,9 +48,27 @@ class MinhasCandidaturasView(TipoRequeridoMixin, ListView):
     context_object_name = "candidaturas"
 
     def get_queryset(self):
-        return Candidatura.objects.filter(
+        consulta = Candidatura.objects.filter(
             estudante__utilizador=self.request.user
         ).select_related("vaga__empresa")
+        q = self.request.GET.get("q", "").strip()
+        if q:
+            consulta = consulta.filter(Q(vaga__titulo__icontains=q) | Q(vaga__empresa__nome__icontains=q))
+        estado = self.request.GET.get("estado", "").strip()
+        if estado in Candidatura.Estado.values:
+            consulta = consulta.filter(estado=estado)
+        return consulta
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        contexto["q"] = self.request.GET.get("q", "").strip()
+        contexto["estado"] = self.request.GET.get("estado", "").strip()
+        contexto["estados"] = Candidatura.Estado.choices
+        contexto["tem_filtros"] = bool(contexto["q"] or contexto["estado"])
+        contexto["total_geral"] = Candidatura.objects.filter(
+            estudante__utilizador=self.request.user
+        ).count()
+        return contexto
 
 
 # ----------------------------------------------------------------- empresa
@@ -151,14 +170,32 @@ class EstagiosEmpresaView(EmpresaRequeridaMixin, ListView):
     context_object_name = "estagios"
 
     def get_queryset(self):
-        return (
+        consulta = (
             Candidatura.objects.filter(estado=E.APROVADO, vaga__empresa=self.empresa)
             .select_related("vaga", "estudante__utilizador", "estudante__curso", "orientador__utilizador")
             .order_by("-atualizado_em")
         )
+        q = self.request.GET.get("q", "").strip()
+        if q:
+            consulta = consulta.filter(
+                Q(estudante__utilizador__first_name__icontains=q)
+                | Q(estudante__utilizador__last_name__icontains=q)
+                | Q(estudante__numero_estudante__icontains=q)
+                | Q(vaga__titulo__icontains=q)
+            )
+        orientador = self.request.GET.get("orientador", "").strip()
+        if orientador == "sem":
+            consulta = consulta.filter(orientador__isnull=True)
+        elif orientador == "com":
+            consulta = consulta.filter(orientador__isnull=False)
+        return consulta
 
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
+        contexto["q"] = self.request.GET.get("q", "").strip()
+        contexto["orientador_filtro"] = self.request.GET.get("orientador", "").strip()
+        contexto["opcoes_orientador"] = [("sem", "Sem orientador"), ("com", "Com orientador")]
+        contexto["tem_filtros"] = bool(contexto["q"] or contexto["orientador_filtro"])
         contexto["orientadores"] = Orientador.objects.filter(
             empresa=self.empresa, utilizador__is_active=True
         ).select_related("utilizador")

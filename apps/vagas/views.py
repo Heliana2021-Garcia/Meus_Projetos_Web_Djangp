@@ -20,13 +20,24 @@ class MinhasVagasView(EmpresaRequeridaMixin, ListView):
     context_object_name = "vagas"
 
     def get_queryset(self):
-        return Vaga.objects.filter(empresa=self.empresa).annotate(
+        consulta = Vaga.objects.filter(empresa=self.empresa).annotate(
             total_candidaturas=Count("candidaturas")
         )
+        q = self.request.GET.get("q", "").strip()
+        if q:
+            consulta = consulta.filter(titulo__icontains=q)
+        estado = self.request.GET.get("estado", "").strip()
+        if estado in Vaga.Estado.values:
+            consulta = consulta.filter(estado=estado)
+        return consulta
 
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
         contexto["empresa"] = self.empresa
+        contexto["q"] = self.request.GET.get("q", "").strip()
+        contexto["estado"] = self.request.GET.get("estado", "").strip()
+        contexto["estados"] = Vaga.Estado.choices
+        contexto["tem_filtros"] = bool(contexto["q"] or contexto["estado"])
         return contexto
 
 
@@ -114,7 +125,18 @@ class FeedVagasView(EstudanteRequeridoMixin, ListView):
         area = self.request.GET.get("area", "").strip()
         if area:
             consulta = consulta.filter(area__icontains=area)
+        modalidade = self.request.GET.get("modalidade", "").strip()
+        if modalidade in Vaga.Modalidade.values:
+            consulta = consulta.filter(modalidade=modalidade)
+        localizacao = self.request.GET.get("localizacao", "").strip()
+        if localizacao:
+            consulta = consulta.filter(localizacao__icontains=localizacao)
+        duracao = self.request.GET.get("duracao", "").strip()
+        if duracao in self.DURACOES:
+            consulta = consulta.filter(duracao_meses__lte=int(duracao))
         return consulta
+
+    DURACOES = {"3": "Até 3 meses", "6": "Até 6 meses", "9": "Até 9 meses", "12": "Até 12 meses"}
 
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
@@ -146,6 +168,17 @@ class FeedVagasView(EstudanteRequeridoMixin, ListView):
         contexto["tipo"] = self.request.GET.get("tipo", "").strip()
         contexto["area"] = self.request.GET.get("area", "").strip()
         contexto["tipos"] = Vaga.Tipo.choices
+        contexto["modalidade"] = self.request.GET.get("modalidade", "").strip()
+        contexto["localizacao"] = self.request.GET.get("localizacao", "").strip()
+        contexto["duracao"] = self.request.GET.get("duracao", "").strip()
+        contexto["modalidades"] = Vaga.Modalidade.choices
+        contexto["duracoes"] = self.DURACOES.items()
+        filtros = self.request.GET.copy()
+        filtros.pop("page", None)
+        contexto["filtros_url"] = filtros.urlencode()
+        contexto["tem_filtros"] = any(
+            filtros.get(k) for k in ("q", "tipo", "area", "modalidade", "localizacao", "duracao")
+        )
         return contexto
 
 

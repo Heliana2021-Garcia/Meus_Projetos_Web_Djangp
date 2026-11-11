@@ -12,6 +12,24 @@
 </div>
 {% endif %}
 
+<form method="get" class="card mb-3"><div class="card-body py-3"><div class="row g-2 align-items-end">
+  <div class="col-12 col-md">
+    <label class="form-label small text-secondary mb-1" for="f-q">Pesquisar</label>
+    <input id="f-q" type="search" name="q" value="{{ q }}" class="form-control" placeholder="Título da vaga">
+  </div>
+  <div class="col-6 col-md-3">
+    <label class="form-label small text-secondary mb-1" for="f-estado">Estado</label>
+    <select id="f-estado" name="estado" class="form-select">
+      <option value="">Todos</option>
+      {% for valor, rotulo in estados %}<option value="{{ valor }}" {% if valor|stringformat:"s" == estado %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-12 col-md-auto d-flex gap-2">
+    <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1"></i>Filtrar</button>
+    {% if tem_filtros %}<a href="{% url 'vagas:minhas' %}" class="btn btn-outline-secondary">Limpar</a>{% endif %}
+  </div>
+</div></div></form>
+
 <div class="card">
   <div class="table-responsive">
     <table class="table table-hover align-middle mb-0">
@@ -44,7 +62,7 @@
         </tr>
         {% empty %}
         <tr><td colspan="6" class="text-center text-secondary py-5">
-          <i class="bi bi-briefcase fs-2 d-block mb-2"></i>Ainda não criou nenhuma vaga. Use o botão "Nova vaga" para começar.
+          <i class="bi bi-briefcase fs-2 d-block mb-2"></i>{% if tem_filtros %}Nenhuma vaga corresponde aos filtros escolhidos.{% else %}Ainda não criou nenhuma vaga. Use o botão "Nova vaga" para começar.{% endif %}
         </td></tr>
         {% endfor %}
       </tbody>

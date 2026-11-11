@@ -2,7 +2,7 @@
 {% block titulo %}Relatórios do estágio{% endblock %}
 {% block conteudo %}
 {% include "components/cabecalho_pagina.html" with titulo="Relatórios do estágio" descricao="Escreva os relatórios exigidos e acompanhe a validação." %}
-<div class="sigest-medio">
+<div class="{% if estagio %}sigest-medio{% endif %}">
   {% if not estagio %}
   <div class="card"><div class="card-body text-center py-5 text-secondary">
     <i class="bi bi-file-earmark-text fs-1"></i>

@@ -131,8 +131,11 @@ body { background-color: var(--sigest-cinza-claro); }
 .progress { --bs-progress-bar-bg: var(--sigest-dourado); --bs-progress-height: .5rem; }
 
 /* Larguras de leitura nas páginas internas */
-.sigest-estreito { max-width: 48rem; }
-.sigest-medio { max-width: 64rem; }
+.sigest-estreito, .sigest-medio { max-width: none; width: 100%; }
+
+/* Formulários: duas colunas nos ecrãs largos; textos longos e listas ocupam a linha toda */
+.sigest-form-grelha { display: grid; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); column-gap: 1.5rem; }
+.sigest-form-grelha .sigest-campo-largo { grid-column: 1 / -1; }
 
 /* Kanban */
 .sigest-coluna { background: #fff; border: 1px solid var(--sigest-borda); border-radius: .75rem; min-height: 10rem; transition: background-color .15s, box-shadow .15s; }

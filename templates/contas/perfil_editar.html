@@ -1,0 +1,101 @@
+{% extends "layouts/base.html" %}
+{% block titulo %}Editar o meu perfil{% endblock %}
+{% block conteudo %}
+{% include "components/cabecalho_pagina.html" with titulo="Editar o meu perfil" descricao="Actualize os seus dados, a palavra-passe e os documentos. Cada secção guarda-se em separado." %}
+<div class="sigest-estreito">
+
+  {# ---- Conta ---- #}
+  {% with form=formularios.conta %}
+  <div class="card mb-3" id="conta"><div class="card-body p-4">
+    <h2 class="h6 mb-3"><i class="bi bi-person me-2"></i>Dados da conta</h2>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="accao" value="conta">
+      {% if form.non_field_errors %}<div class="alert alert-danger py-2 small">{{ form.non_field_errors.0 }}</div>{% endif %}
+      {% for campo in form %}{% include "components/campo.html" %}{% endfor %}
+      <p class="form-text">O email serve também para entrar no sistema.</p>
+      <button type="submit" class="btn btn-primary">Guardar dados da conta</button>
+    </form>
+  </div></div>
+  {% endwith %}
+
+  {# ---- Perfil (depende do tipo de utilizador) ---- #}
+  {% if "perfil" in formularios %}
+  {% with form=formularios.perfil %}
+  <div class="card mb-3" id="perfil"><div class="card-body p-4">
+    {% if estudante %}
+    <h2 class="h6 mb-3"><i class="bi bi-person-vcard me-2"></i>Perfil profissional</h2>
+    <p class="small text-secondary">O curso, o ano e a média são validados pela coordenação e não se alteram aqui.</p>
+    {% elif empresa %}
+    <h2 class="h6 mb-3"><i class="bi bi-building me-2"></i>Dados da empresa</h2>
+    <p class="small text-secondary">O NIF ({{ empresa.nif }}) foi validado pela coordenação e não se altera aqui.</p>
+    {% else %}
+    <h2 class="h6 mb-3"><i class="bi bi-person-workspace me-2"></i>Dados do orientador</h2>
+    {% endif %}
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="accao" value="perfil">
+      {% if form.non_field_errors %}<div class="alert alert-danger py-2 small">{{ form.non_field_errors.0 }}</div>{% endif %}
+      {% for campo in form %}{% include "components/campo.html" %}{% endfor %}
+      <button type="submit" class="btn btn-primary">Guardar perfil</button>
+    </form>
+  </div></div>
+  {% endwith %}
+  {% endif %}
+
+  {# ---- Documentos (estudantes) ---- #}
+  {% if estudante %}
+  <div class="card mb-3" id="documentos"><div class="card-body p-4">
+    <h2 class="h6 mb-3"><i class="bi bi-folder2-open me-2"></i>Documentos</h2>
+    <p class="small mb-2">
+      Estado do registo:
+      {% if estudante.registo_estado == 'APROVADO' %}<span class="badge text-bg-success">{{ estudante.get_registo_estado_display }}</span>
+      {% elif estudante.registo_estado == 'DEVOLVIDO' %}<span class="badge text-bg-danger">{{ estudante.get_registo_estado_display }}</span>
+      {% else %}<span class="badge text-bg-warning">{{ estudante.get_registo_estado_display }}</span>{% endif %}
+    </p>
+    {% if estudante.registo_estado == 'DEVOLVIDO' %}
+    <div class="alert alert-danger small"><strong>Motivo:</strong> {{ estudante.registo_motivo }}</div>
+    {% endif %}
+    <ul class="list-group mb-3">
+      {% for d in documentos %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-file-earmark-text me-2"></i>{{ d.get_tipo_display }}</span>
+        <a href="{% url 'estudantes:documento' d.pk %}" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm">Abrir</a>
+      </li>
+      {% empty %}
+      <li class="list-group-item text-secondary">Ainda não enviou nenhum documento.</li>
+      {% endfor %}
+    </ul>
+    {% if documentos_editaveis %}
+    {% with form=formularios.documentos %}
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="accao" value="documentos">
+      {% if form.non_field_errors %}<div class="alert alert-danger py-2 small">{{ form.non_field_errors.0 }}</div>{% endif %}
+      {% for campo in form %}{% include "components/campo.html" %}{% endfor %}
+      <button type="submit" class="btn btn-primary">Enviar documentos</button>
+    </form>
+    {% endwith %}
+    {% else %}
+    <p class="small text-secondary mb-0">O registo está aprovado, por isso os documentos já não podem ser alterados.</p>
+    {% endif %}
+  </div></div>
+  {% endif %}
+
+  {# ---- Palavra-passe ---- #}
+  {% with form=formularios.senha %}
+  <div class="card mb-3" id="senha"><div class="card-body p-4">
+    <h2 class="h6 mb-3"><i class="bi bi-key me-2"></i>Alterar a palavra-passe</h2>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="accao" value="senha">
+      {% if form.non_field_errors %}<div class="alert alert-danger py-2 small">{{ form.non_field_errors.0 }}</div>{% endif %}
+      {% for campo in form %}{% include "components/campo.html" %}{% endfor %}
+      <button type="submit" class="btn btn-primary">Alterar palavra-passe</button>
+    </form>
+  </div></div>
+  {% endwith %}
+
+  <a href="{% url 'contas:perfil' %}" class="btn btn-outline-secondary">Voltar ao meu perfil</a>
+</div>
+{% endblock %}

@@ -39,6 +39,9 @@
           <ul class="dropdown-menu dropdown-menu-end">
             <li><span class="dropdown-item-text small text-secondary">{{ user.get_tipo_display }}</span></li>
             <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'contas:perfil' %}"><i class="bi bi-person me-2"></i>Perfil</a></li>
+            <li><a class="dropdown-item" href="{% url 'contas:editar_perfil' %}"><i class="bi bi-pencil-square me-2"></i>Editar o meu perfil</a></li>
+            <li><hr class="dropdown-divider"></li>
             <li>
               <form method="post" action="{% url 'contas:sair' %}" data-confirmar="Tem a certeza de que pretende terminar a sess&atilde;o?" data-confirmar-titulo="Terminar sess&atilde;o" data-confirmar-botao="Terminar sess&atilde;o" data-confirmar-tipo="primario">
                 {% csrf_token %}
@@ -69,7 +72,6 @@
             <li class="nav-item"><a class="nav-link {% if vn == 'candidaturas:diario' or vn == 'candidaturas:registo_editar' %}active{% endif %}" href="{% url 'candidaturas:diario' %}"><i class="bi bi-journal-text"></i> Diário</a></li>
             <li class="nav-item"><a class="nav-link {% if vn == 'candidaturas:relatorios' or vn == 'candidaturas:relatorio' %}active{% endif %}" href="{% url 'candidaturas:relatorios' %}"><i class="bi bi-file-earmark-text"></i> Relatórios</a></li>
             <li class="nav-item"><a class="nav-link {% if vn == 'candidaturas:minha_avaliacao' or vn == 'candidaturas:avaliacao' %}active{% endif %}" href="{% url 'candidaturas:minha_avaliacao' %}"><i class="bi bi-award"></i> Avaliação</a></li>
-            <li class="nav-item"><a class="nav-link {% if vn == 'estudantes:perfil' %}active{% endif %}" href="{% url 'estudantes:perfil' %}"><i class="bi bi-person-vcard"></i> O meu perfil</a></li>
 
             {% elif user.e_empresa %}
             <li class="nav-item"><a class="nav-link {% if vn == 'empresas:painel' %}active{% endif %}" href="{% url 'empresas:painel' %}"><i class="bi bi-speedometer2"></i> Painel</a></li>

@@ -1,7 +1,7 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path
 
-from . import views
+from . import views, views_perfil
 from .forms import EntrarForm
 
 app_name = "contas"
@@ -19,6 +19,8 @@ urlpatterns = [
         name="entrar",
     ),
     path("sair/", auth_views.LogoutView.as_view(), name="sair"),
+    path("perfil/", views_perfil.PerfilView.as_view(), name="perfil"),
+    path("perfil/editar/", views_perfil.EditarPerfilView.as_view(), name="editar_perfil"),
     path("registo/estudante/", views.RegistoEstudanteView.as_view(), name="registo_estudante"),
     path("registo/empresa/", views.RegistoEmpresaView.as_view(), name="registo_empresa"),
 ]

@@ -4,14 +4,14 @@ from django.http import FileResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import FormView, TemplateView, UpdateView
+from django.views.generic import FormView, TemplateView
 
 from apps.contas.mixins import TipoRequeridoMixin
 from apps.contas.models import Utilizador
-from apps.core.notificacoes import notificar_gestao
 
-from .forms import DocumentosEstudanteForm, PerfilEstudanteForm
+from .forms import DocumentosEstudanteForm
 from .models import DocumentoEstudante, PerfilEstudante
+from .servicos import submeter_documentos
 
 
 class PainelEstudanteView(TipoRequeridoMixin, TemplateView):
@@ -27,19 +27,6 @@ class PainelEstudanteView(TipoRequeridoMixin, TemplateView):
         )
         return contexto
 
-
-class PerfilEstudanteUpdateView(TipoRequeridoMixin, UpdateView):
-    template_name = "estudantes/perfil_form.html"
-    tipos_permitidos = (Utilizador.Tipo.ESTUDANTE,)
-    form_class = PerfilEstudanteForm
-    success_url = reverse_lazy("estudantes:painel")
-
-    def get_object(self, queryset=None):
-        return get_object_or_404(PerfilEstudante, utilizador=self.request.user)
-
-    def form_valid(self, form):
-        messages.success(self.request, "Perfil actualizado.")
-        return super().form_valid(form)
 
 class DocumentosEstudanteView(TipoRequeridoMixin, FormView):
     template_name = "estudantes/documentos.html"
@@ -71,18 +58,7 @@ class DocumentosEstudanteView(TipoRequeridoMixin, FormView):
         return super().post(request, *args, **kwargs)
 
     def form_valid(self, form):
-        dados = form.cleaned_data
-        if dados.get("declaracao_notas"):
-            self.perfil.guardar_documento(DocumentoEstudante.Tipo.DECLARACAO, dados["declaracao_notas"])
-        if dados.get("declaracao_frequencia"):
-            self.perfil.guardar_documento(DocumentoEstudante.Tipo.FREQUENCIA, dados["declaracao_frequencia"])
-        if self.perfil.registo_estado == PerfilEstudante.Registo.DEVOLVIDO:
-            self.perfil.resubmeter_registo()
-            notificar_gestao(
-                "Registo corrigido",
-                f"{self.perfil.utilizador} voltou a submeter os documentos para validação.",
-                reverse_lazy("relatorios:estudantes_pendentes"),
-            )
+        submeter_documentos(self.perfil, form.cleaned_data)
         messages.success(self.request, "Documentos enviados. A coordenação vai analisá-los.")
         return super().form_valid(form)
 

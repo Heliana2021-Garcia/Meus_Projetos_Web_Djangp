@@ -46,19 +46,21 @@ class MenuETests(PerfilBase):
             self.assertEqual(resposta.status_code, 302)
             self.assertIn(reverse("contas:entrar"), resposta.url)
 
-    def test_menu_tem_perfil_e_sair_e_o_botao_so_mostra_icone(self):
+    def test_nome_fica_a_vista_e_o_menu_so_tem_perfil_e_sair(self):
         self.client.force_login(self.u_aluno)
         html = self.client.get(reverse("contas:perfil")).content.decode()
-        self.assertIn(f'href="{reverse("contas:perfil")}"', html)
-        self.assertIn("Sair", html)
+        # o nome está no cabeçalho, fora do botão e fora do menu
+        cabecalho = html[html.index("sigest-nome-utilizador"):html.index("sigest-btn-utilizador")]
+        self.assertIn("Ana Silva", cabecalho)
         inicio = html.index("sigest-btn-utilizador")
         botao = html[inicio:html.index("</button>", inicio)]
         self.assertIn("bi-person-circle", botao)
-        self.assertNotIn("Ana", botao.split("title=")[1].split(">", 1)[1])
-        # "Editar o meu perfil" deixou de estar no menu: está na página Perfil
+        self.assertNotIn("Ana Silva", botao)
         menu = html[html.index("dropdown-menu"):html.index("</ul>", html.index("dropdown-menu"))]
+        self.assertNotIn("Ana Silva", menu)
+        self.assertIn(reverse("contas:perfil"), menu)
+        self.assertIn("Sair", menu)
         self.assertNotIn(reverse("contas:editar_perfil"), menu)
-        self.assertIn(reverse("contas:editar_perfil"), html)
 
     def test_todos_os_perfis_abrem_as_duas_paginas(self):
         for utilizador in (self.u_aluno, self.u_emp, self.u_ori, self.u_coord):

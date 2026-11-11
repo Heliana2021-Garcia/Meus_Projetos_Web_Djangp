@@ -133,6 +133,10 @@ body { background-color: var(--sigest-cinza-claro); }
 /* Larguras de leitura nas páginas internas */
 .sigest-estreito, .sigest-medio { max-width: none; width: 100%; }
 
+/* Cartões do perfil: preenchem a largura, em tantas colunas quantas couberem */
+.sigest-cartoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(24rem, 1fr)); gap: 1rem; align-items: start; }
+@media (max-width: 575.98px) { .sigest-cartoes { grid-template-columns: 1fr; } }
+
 /* Formulários: duas colunas nos ecrãs largos; textos longos e listas ocupam a linha toda */
 .sigest-form-grelha { display: grid; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); column-gap: 1.5rem; }
 .sigest-form-grelha .sigest-campo-largo { grid-column: 1 / -1; }

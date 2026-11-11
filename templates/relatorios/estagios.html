@@ -10,7 +10,7 @@
         {% for e in estagios %}
         <tr>
           <td>{{ e.estudante.utilizador.get_full_name|default:e.estudante.utilizador.username }}<br><small class="text-secondary">{{ e.estudante.numero_estudante }} · {{ e.estudante.curso.sigla }}</small></td>
-          <td>{{ e.vaga.empresa.nome }}<br><small class="text-secondary">{{ e.vaga.titulo }}</small></td>
+          <td>{{ e.vaga.empresa.nome }}<br><small class="text-secondary"><a href="mailto:{{ e.vaga.empresa.email }}">{{ e.vaga.empresa.email }}</a><br>{{ e.vaga.titulo }}</small></td>
           <td>{{ e.orientador.utilizador.get_full_name|default:"—" }}</td>
           <td>
             {% include "components/estado_estagio.html" with c=e %}<br><a href="{% url 'candidaturas:acompanhar' e.pk %}" class="small">Acompanhamento</a>

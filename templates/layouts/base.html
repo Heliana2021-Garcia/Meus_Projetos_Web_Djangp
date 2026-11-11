@@ -31,13 +31,15 @@
           <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-warning">{{ notificacoes_nao_lidas }}<span class="visually-hidden"> notificações por ler</span></span>
           {% endif %}
         </a>
+        <span class="d-none d-sm-block text-end lh-sm sigest-nome-utilizador">
+          <span class="d-block fw-medium">{{ user.get_full_name|default:user.username }}</span>
+          <small class="text-secondary">{{ user.get_tipo_display }}</small>
+        </span>
         <div class="dropdown">
-          <button class="btn btn-light sigest-btn-utilizador" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="{{ user.get_full_name|default:user.username }}" aria-label="Menu do utilizador">
+          <button class="btn btn-light sigest-btn-utilizador" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Menu do utilizador" aria-label="Menu do utilizador">
             <i class="bi bi-person-circle fs-5"></i>
           </button>
           <ul class="dropdown-menu dropdown-menu-end">
-            <li><span class="dropdown-item-text"><strong class="d-block">{{ user.get_full_name|default:user.username }}</strong><small class="text-secondary">{{ user.get_tipo_display }}</small></span></li>
-            <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="{% url 'contas:perfil' %}"><i class="bi bi-person me-2"></i>Perfil</a></li>
             <li><hr class="dropdown-divider"></li>
             <li>

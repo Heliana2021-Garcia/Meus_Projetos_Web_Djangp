@@ -65,7 +65,7 @@
         {% for c in linhas %}
         <tr>
           <td>{{ c.estudante.utilizador.get_full_name|default:c.estudante.utilizador.username }}<br><small class="text-secondary">{{ c.estudante.numero_estudante }} · {{ c.estudante.curso.sigla }}</small></td>
-          <td>{{ c.vaga.empresa.nome }}<br><small class="text-secondary">{{ c.vaga.titulo }}</small></td>
+          <td>{{ c.vaga.empresa.nome }}<br><small class="text-secondary"><a href="mailto:{{ c.vaga.empresa.email }}">{{ c.vaga.empresa.email }}</a><br>{{ c.vaga.titulo }}</small></td>
           <td>{{ c.vaga.get_tipo_estagio_display }}</td>
           <td>{{ c.orientador.utilizador.get_full_name|default:"—" }}</td>
           <td>{% include "components/estado_estagio.html" with c=c %}<br><a href="{% url 'candidaturas:acompanhar' c.pk %}" class="small">Acompanhamento</a></td>

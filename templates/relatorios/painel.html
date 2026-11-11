@@ -25,12 +25,13 @@
   {% if empresas_pendentes %}
   <div class="table-responsive">
     <table class="table table-hover align-middle mb-0">
-      <thead><tr><th>Empresa</th><th>NIF</th><th>Responsável</th><th>Registo</th><th></th></tr></thead>
+      <thead><tr><th>Empresa</th><th>NIF</th><th>Email</th><th>Responsável</th><th>Registo</th><th></th></tr></thead>
       <tbody>
         {% for e in empresas_pendentes %}
         <tr>
           <td>{{ e.nome }}</td>
           <td>{{ e.nif }}</td>
+          <td><a href="mailto:{{ e.email }}">{{ e.email }}</a></td>
           <td>{{ e.utilizador.get_full_name|default:e.utilizador.username }}</td>
           <td>{{ e.criado_em|date:"d/m/Y" }}</td>
           <td class="text-end">
@@ -61,7 +62,7 @@
           <td>{{ c.estudante.utilizador.get_full_name|default:c.estudante.utilizador.username }}<br><small class="text-secondary">{{ c.estudante.numero_estudante }}</small></td>
           <td>{{ c.estudante.curso.sigla }}</td>
           <td>{{ c.vaga.titulo }}</td>
-          <td>{{ c.vaga.empresa.nome }}</td>
+          <td>{{ c.vaga.empresa.nome }}<br><small class="text-secondary"><a href="mailto:{{ c.vaga.empresa.email }}">{{ c.vaga.empresa.email }}</a></small></td>
           <td>{% if c.carta %}{{ c.carta.referencia }}{% else %}<span class="text-secondary">Por emitir</span>{% endif %}</td>
           <td class="text-end">
             {% if c.carta %}

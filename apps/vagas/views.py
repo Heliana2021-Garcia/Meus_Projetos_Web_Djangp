@@ -109,7 +109,7 @@ class FeedVagasView(EstudanteRequeridoMixin, ListView):
     def get_queryset(self):
         consulta = (
             Vaga.objects.para_feed()
-            .select_related("empresa")
+            .select_related("empresa__utilizador")
             .prefetch_related("tecnologias", "cursos")
         )
         q = self.request.GET.get("q", "").strip()
@@ -189,7 +189,7 @@ class VagaDetalheView(EstudanteRequeridoMixin, DetailView):
     def get_queryset(self):
         return (
             Vaga.objects.publicas()
-            .select_related("empresa")
+            .select_related("empresa__utilizador")
             .prefetch_related("tecnologias", "cursos")
         )
 

@@ -29,7 +29,7 @@
         <h2 class="h6 mb-1">
           {% if c.vaga.publica %}<a href="{% url 'vagas:detalhe' c.vaga.pk %}">{{ c.vaga.titulo }}</a>{% else %}{{ c.vaga.titulo }}{% endif %}
         </h2>
-        <p class="small text-secondary mb-0">{{ c.vaga.empresa.nome }} · enviada a {{ c.criado_em|date:"d/m/Y" }}</p>
+        <p class="small text-secondary mb-0">{{ c.vaga.empresa.nome }} · <a href="mailto:{{ c.vaga.empresa.email }}">{{ c.vaga.empresa.email }}</a> · enviada a {{ c.criado_em|date:"d/m/Y" }}</p>
       </div>
       {% include "components/estado_candidatura.html" %}
     </div>

@@ -2,9 +2,9 @@
 {% block titulo %}O meu perfil{% endblock %}
 {% block conteudo %}
 {% include "components/cabecalho_pagina.html" with titulo="O meu perfil" descricao="As informações da sua conta." %}
-<div class="sigest-estreito">
+<div class="sigest-cartoes">
 
-  <div class="card mb-3"><div class="card-body p-4">
+  <div class="card"><div class="card-body p-4">
     <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
       <div>
         <h2 class="h5 mb-1">{{ user.get_full_name|default:user.username }}</h2>
@@ -23,7 +23,7 @@
   </div></div>
 
   {% if estudante %}
-  <div class="card mb-3"><div class="card-body p-4">
+  <div class="card"><div class="card-body p-4">
     <h3 class="h6 mb-3">Dados académicos</h3>
     <dl class="row small mb-3">
       <dt class="col-sm-4 text-secondary fw-normal">Número de estudante</dt><dd class="col-sm-8">{{ estudante.numero_estudante }}</dd>
@@ -41,7 +41,7 @@
     <p class="small text-secondary mb-0">Os dados académicos são validados pela coordenação. Se algum estiver errado, contacte a coordenação.</p>
   </div></div>
 
-  <div class="card mb-3"><div class="card-body p-4">
+  <div class="card"><div class="card-body p-4">
     <h3 class="h6 mb-3">Perfil profissional</h3>
     <dl class="row small mb-3">
       <dt class="col-sm-4 text-secondary fw-normal">Resumo</dt><dd class="col-sm-8">{{ estudante.resumo|default:"Ainda sem resumo."|linebreaksbr }}</dd>
@@ -54,7 +54,7 @@
     </div>
   </div></div>
 
-  <div class="card mb-3">
+  <div class="card">
     <div class="card-header bg-white"><h3 class="h6 mb-0">Documentos enviados</h3></div>
     <ul class="list-group list-group-flush">
       {% for d in documentos %}
@@ -70,7 +70,7 @@
   {% endif %}
 
   {% if empresa %}
-  <div class="card mb-3"><div class="card-body p-4">
+  <div class="card"><div class="card-body p-4">
     <h3 class="h6 mb-3">Dados da empresa</h3>
     <dl class="row small mb-0">
       <dt class="col-sm-4 text-secondary fw-normal">Nome da empresa</dt><dd class="col-sm-8">{{ empresa.nome }}</dd>
@@ -87,7 +87,7 @@
   {% endif %}
 
   {% if orientador %}
-  <div class="card mb-3"><div class="card-body p-4">
+  <div class="card"><div class="card-body p-4">
     <h3 class="h6 mb-3">Dados do orientador</h3>
     <dl class="row small mb-0">
       <dt class="col-sm-4 text-secondary fw-normal">Empresa</dt><dd class="col-sm-8">{{ empresa_orientador.nome }}</dd>

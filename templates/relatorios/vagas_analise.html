@@ -8,7 +8,7 @@
     <div class="d-flex justify-content-between align-items-start gap-2">
       <div>
         <h2 class="h5 mb-1">{{ vaga.titulo }}</h2>
-        <p class="small text-secondary mb-0">{{ vaga.empresa.nome }} · NIF {{ vaga.empresa.nif }}</p>
+        <p class="small text-secondary mb-0">{{ vaga.empresa.nome }} · NIF {{ vaga.empresa.nif }} · <a href="mailto:{{ vaga.empresa.email }}">{{ vaga.empresa.email }}</a>{% if vaga.empresa.telefone %} · {{ vaga.empresa.telefone }}{% endif %}</p>
       </div>
       {% if vaga.empresa.e_parceira %}<span class="badge text-bg-warning"><i class="bi bi-star-fill me-1"></i>Parceira</span>{% endif %}
     </div>

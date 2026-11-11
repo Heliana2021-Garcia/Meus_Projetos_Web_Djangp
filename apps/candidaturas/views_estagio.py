@@ -22,7 +22,7 @@ def estagio_do_estudante(perfil):
     """O estágio aberto do estudante; se não houver, o mais recente."""
     lista = list(
         Candidatura.objects.filter(estudante=perfil, estado=E.APROVADO)
-        .select_related("vaga__empresa", "orientador__utilizador")
+        .select_related("vaga__empresa__utilizador", "orientador__utilizador")
         .order_by("-atualizado_em")
     )
     return next((c for c in lista if c.estagio_aberto), lista[0] if lista else None)

@@ -50,7 +50,7 @@ class MinhasCandidaturasView(TipoRequeridoMixin, ListView):
     def get_queryset(self):
         consulta = Candidatura.objects.filter(
             estudante__utilizador=self.request.user
-        ).select_related("vaga__empresa")
+        ).select_related("vaga__empresa__utilizador")
         q = self.request.GET.get("q", "").strip()
         if q:
             consulta = consulta.filter(Q(vaga__titulo__icontains=q) | Q(vaga__empresa__nome__icontains=q))

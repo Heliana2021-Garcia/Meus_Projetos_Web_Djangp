@@ -8,7 +8,7 @@
     <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
       <div>
         <h2 class="h5 mb-1">{{ estagio.vaga.titulo }}</h2>
-        <p class="text-secondary mb-0">{{ estagio.vaga.empresa.nome }}</p>
+        <p class="text-secondary mb-0">{{ estagio.vaga.empresa.nome }} · <a href="mailto:{{ estagio.vaga.empresa.email }}">{{ estagio.vaga.empresa.email }}</a></p>
       </div>
       {% include "components/estado_estagio.html" with c=estagio %}
     </div>

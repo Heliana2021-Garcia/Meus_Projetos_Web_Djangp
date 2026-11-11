@@ -35,7 +35,7 @@ class PainelAdminView(TipoRequeridoMixin, TemplateView):
         contexto["aprovadas"] = (
             Candidatura.objects.filter(estado=Candidatura.Estado.APROVADO)
             .select_related(
-                "estudante__utilizador", "estudante__curso", "vaga__empresa", "carta"
+                "estudante__utilizador", "estudante__curso", "vaga__empresa__utilizador", "carta"
             )
             .order_by("-atualizado_em")
         )
@@ -96,7 +96,7 @@ class ExportarColocacoesView(TipoRequeridoMixin, View):
     def get(self, request):
         candidaturas = (
             Candidatura.objects.filter(estado=Candidatura.Estado.APROVADO)
-            .select_related("estudante__utilizador", "estudante__curso", "vaga__empresa")
+            .select_related("estudante__utilizador", "estudante__curso", "vaga__empresa__utilizador")
             .order_by("estudante__curso__nome", "estudante__numero_estudante")
         )
         registos = []
@@ -137,7 +137,7 @@ class VagasEmAnaliseView(TipoRequeridoMixin, ListView):
     def get_queryset(self):
         return (
             Vaga.objects.filter(estado=Vaga.Estado.EM_ANALISE)
-            .select_related("empresa")
+            .select_related("empresa__utilizador")
             .prefetch_related("cursos", "tecnologias")
             .order_by("criado_em")
         )
@@ -274,7 +274,7 @@ class EstagiosGestaoView(TipoRequeridoMixin, ListView):
         return (
             Candidatura.objects.filter(estado=Candidatura.Estado.APROVADO)
             .select_related(
-                "vaga__empresa", "estudante__utilizador", "estudante__curso", "orientador__utilizador"
+                "vaga__empresa__utilizador", "estudante__utilizador", "estudante__curso", "orientador__utilizador"
             )
             .order_by("-atualizado_em")
         )

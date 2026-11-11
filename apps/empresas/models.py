@@ -35,6 +35,11 @@ class Empresa(ModeloBase):
         return self.nome
 
     @property
+    def email(self):
+        """O email com que a empresa se registou (é também o que usa para entrar)."""
+        return self.utilizador.email
+
+    @property
     def e_parceira(self):
         return self.tipo == self.Tipo.PARCEIRA
 
